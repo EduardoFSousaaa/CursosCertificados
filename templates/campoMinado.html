@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/campoMinado.css') }}">
+    <!-- Font Awesome js -->
+    <script src="https://kit.fontawesome.com/82f6f08804.js" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/campoMinado.js') }}" defer ></script>
+    <title>Campo Minado</title>
+  </head>
+  <body oncontextmenu="return false;" onselectstart="return false;">
+    
+     <a class="btn-sm btn-danger" data-bs-toggle="collapse" href="#collapseMinas" role="button" aria-expanded="false" aria-controls="collapseExample">
+    Mostra Minas
+    </a>
+    <div class="collapse" id="collapseMinas">
+      <div class="col col-4">
+        <table>
+          <tr>Minas na posiçao:
+        {% for mina in (MinasDoMapa) %}
+          {% if not (loop.index0) % 10 == 0 and loop.index0 != 0%}
+            <td>{{(loop.index0+1)}}:&nbsp;({{mina[0]}},{{mina[1]}})&nbsp;</td>
+          {% else %}
+            </tr><tr>
+          <td>{{(loop.index0+1)}}:&nbsp;({{mina[0]}},{{mina[1]}})&nbsp;</td>
+          {% endif %}
+        {% endfor %}
+        </tr>
+        </table>
+      </div>
+    </div>
+    <h1>Campo Minado</h1>
+    <div class="container-fluid">
+      <form class="flex-column" action="{{url_for('campoMinado.source_function')}}" method="post" id="FormId">
+        <div class="input-group md-3">
+          <label class="input-group-text">Campo Minado:&nbsp;
+            <button onclick = "MudaTamanhoCampoMinado('Pequeno')" class="btn-success me-md-2">pequeno</button>
+            <button onclick = "MudaTamanhoCampoMinado('Medio')" class="btn-warning me-md-2">Medio</button>
+            <button onclick = "MudaTamanhoCampoMinado('Grande')" class="btn-danger me-md-2">Grande</button>
+          </label>
+        </div> 
+        <div class="input-group md-3">
+          <label class="input-group-text">Tamanho do campo(x,y):&nbsp;
+            <input name = "TamanhoCampoInput" type="number" min="3" max="40" value="{{TamanhoCampoXeY}}"></Input>
+          </label> 
+        </div>
+        <div class="input-group md-3">
+          <label class="input-group-text">Numero de minas:&nbsp;
+            <input name="NumeroMinasInput" type="number"  min="0" value="{{NumeroMinas}}"></Input>
+            <button id="btnCampoMinadoSubmit" class="btn-danger me-md-2" type="submit">Enviar</button>
+          </label>   
+        </div>
+      </form>
+    </div>
+    <div class="container-fluid">
+      <div class="row row-cols-5">
+        <div class="col-1 col-sm">
+          <a style="text-align: center;" href="#" onclick="location.reload()">Novo Game</a>
+        </div>
+        <div id="statusPartida" class="col-4 col-sm">
+        </div>
+        <div class="col-3 col-md">
+          <h5 style="text-align: center; margin-right: 10px;">Nº de Minas: 
+            <i style="color: red;" id="qtd_minas">{{NumeroMinas}}</i>
+          </h5>
+        </div>
+        <div class="col-3 col-md">
+          <h5 style="text-align: right; margin-right: 10px;">Tempo:
+            <i style="color: blue;" id="tempo">00:00:00</i>
+          </h5>
+        </div>
+      </div>
+      <div class="d-flex justify-content-center">
+        <div class="col">
+        </div>
+        <div class="col">
+          <table id="MapaDoCampoMinado">
+          <tr>
+          <td class="CabecalhoTabela">
+            <input type="hidden" name="TamanhoDoMapa" value="{{TamanhoCampoXeY}}">
+          </td>
+            {% for itamanho in range(0, TamanhoCampoXeY) %}
+              <td class="CabecalhoTabela" style="text-align: center;">{{itamanho}}</td>
+            {% endfor %}
+            </tr>
+            {% for linha in (mapa) %}
+              <td class="CabecalhoTabela">{{loop.index0}}</td>
+              {% set rowloop = loop %}
+              {% for quadrado in (linha) %}
+              <td name="td_quadrado_{{rowloop.index0}}_{{loop.index0}}">
+                  <button class="quadrado" type="hidden" name="quadrado_{{rowloop.index0}}_{{loop.index0}}" value="{{quadrado}}"><i style="visibility: hidden;" class="fa-solid fa-flag"></i></button>
+              </td>
+              {% endfor %}
+              </tr>
+            {% endfor %}
+          </table>
+        </div>
+        <div class="col"></div>
+        <div class="col"></div>
+      </div>
+    </div>
+    
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    -->
+    <!-- Modal Perdeu -->
+<div class="modal fade dark" id="ModalMina" tabindex="-1" role="dialog" aria-labelledby="ModalMinaLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title" style="color: red;" id="exampleModalLabel">Game Over</h1>
+        <button type="button" data-dismiss="modal" aria-label="Close" onclick="fechamodal('ModalMina')">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body ">
+        <h1 style="color: red; text-align: center;">Voce perdeu!!!</h1>
+        <h1>Você acertou uma mina!</h1>
+        <h6 style="text-align: justify;">Aperte fechar, e aperte e novo game.</h6>
+      </div>  
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="fechamodal('ModalMina')" data-dismiss="modal">fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal Minas Abaixo de Zero -->
+<div class="modal fade dark" id="ModalMinasAbaixoZero" tabindex="-1" role="dialog" aria-labelledby="ModalMinasAbaixoZeroLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title" style="color: red;" id="exampleModalLabel">Game Over</h1>
+        <button type="button" data-dismiss="modal" aria-label="Close" onclick="fechamodal('ModalMinasAbaixoZero')">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <h6 style="color: yellowgreen; text-align: center;">Voce esta perdendo o jogo!!!</h6>
+        <h6 style="color: red">Sua quantidade de minas ficou abaixo de zero!</h6>
+        <h6 style="color: yellowgreen;">Sua quantidades de bandeiras é maior do que a de minas</h6>
+        <h6 style="text-align: justify;">Aperte fechar para continuar jogando.</h6>
+      </div>  
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="fechamodal('ModalMinasAbaixoZero')" data-dismiss="modal">fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+  </body>
+</html>
+<!--Sessão Scripts-->
+<script>
+  //variaveis Global
+  
+  //para os alertas
+  var globalMensagemAlerta = ''
+  var globalVarAlerta = false;
+  //para os tamanhos do campoMinado e quantidade de minas
+  
+  //pequeno  
+  var GlobalCampoPequenoTamanho = 10;
+  var GlobalCampoPequenoQtdMinas = 10;
+  //medio
+  var GlobalCampoMedioTamanho = 15;
+  var GlobalCampoMedioQtdMinas = 25;
+  //grande
+  var GlobalCampoGrandeTamanho = 40;
+  var GlobalCampoGrandeQtdMinas = 120;
+
+  const intervalID=null;
+  const listaDeVisitados=new Array();
+  //---------------------------------
+  
+  const tabelaMapa = document.getElementById("MapaDoCampoMinado");
+  tabelaMapa.addEventListener("mousedown", (e) => {
+    const elementoClicado = event.target;
+    if (elementoClicado  instanceof HTMLButtonElement) {
+      //console.log(`Botão ${e.button} clicado no elemento:`, elementoClicado.name);
+      if(e.buttons == 3){
+        //debugger;
+          //AbrirButtonsaoRedor(elementoClicado.name,TamanhoCampoXeY);
+      }else{
+        switch (e.button) {
+        //Left button clicked.
+        case 0:
+          if(document.getElementById("tempo").textContent =='00:00:00'){
+             var meuIntervalo = tempo();
+          }
+          //elementoClicado.style.pointerEvents = "none";
+          elementoClicado.style.backgroundColor = "white";
+          elementoClicado.style.borderColor = "white";
+          elementoClicado.style.display = "none";
+          var value = elementoClicado.value;
+          //debugger; 
+          //elementoClicado.innerHTML = "<input class='inputQuadrado' onchange='AddOuvinte(\"input_"+ elementoClicado.name+"\")'+ name='input_" + elementoClicado.name+"\'"+" type='button' value='"+(value==0?" ":value)+"\'></input>";
+        elementoClicado.innerHTML = "<input class='inputQuadrado' name='input_" + elementoClicado.name+"\'"+" type='button' value='"+(value==0?" ":value)+"\'></input>";
+          elementoClicado.style.display = "";
+          elementoh1 = document.getElementsByName("input_"+elementoClicado.name)[0];
+          //1 (azul), 2 (verde), 3 (vermelho), 4 (azul escuro), 5 (marrom), 6 (ciano), 7 (preto) e 8 (cinza). 
+          switch(value) {
+            case 'X':
+              derrota();
+              elementoh1.style.color = "red";
+              break;
+            case '0':
+              elementoh1.style.color = "green";
+              elementoh1.innerHTML = "";
+              TamanhoCampoXeY = document.getElementsByName("TamanhoDoMapa")[0].value
+              if(listaDeVisitados==undefined){
+                let listaDeVisitados = new Array();
+              }
+                AbrirButtonsaoRedor(elementoClicado.name,TamanhoCampoXeY,listaDeVisitados);
+              break;
+
+              case '1':
+              elementoh1.style.color = "blue";
+              break;
+
+              case '2':
+              elementoh1.style.color = "green";
+              break;
+
+              case '3':
+              elementoh1.style.color = "red";
+              break;
+
+              case '4':
+              elementoh1.style.color = "dark blue";
+              break;
+
+              case '5':
+                elementoh1.style.color = "Brown";
+                break;
+
+              case '6':
+                elementoh1.style.color = "Cyan";
+                break;
+
+              case '7':
+                elementoh1.style.color = "black";
+                break;
+              case '8':
+                elementoh1.style.color = "Gray";
+                break;
+              default:
+                elementoh1.style.color = "black";
+                break;
+            }
+            if(value != 'X'){
+              verificaFimDeJogo();
+          }  
+        break;
+        //Right button clicked.
+        case 2:
+          var iconeBandeira = elementoClicado.querySelector(".fa-flag");
+          var qtd_minas_element = document.getElementById("qtd_minas");
+          var qtd_minas = parseInt(qtd_minas_element.innerText);
+          if(iconeBandeira !=undefined){
+            if (iconeBandeira.style.visibility == "hidden") {  
+              iconeBandeira.style.setProperty("visibility", "visible"); 
+              elementoClicado.style.backgroundColor = "white";
+              qtd_minas -= 1;
+            } else {
+              qtd_minas += 1;
+              iconeBandeira.style.setProperty("visibility", "hidden"); 
+              elementoClicado.style.backgroundColor = "gray";
+            }
+          }
+          if(qtd_minas < 0){
+            // 1. Get a reference to the modal element
+              const myModalElement = document.getElementById('ModalMinasAbaixoZero');
+              // 2. Create a new Bootstrap Modal instance
+              const myModal = new bootstrap.Modal(myModalElement, {});
+              // 3. Use the show() method to display the modal
+              myModal.show();
+          }
+          qtd_minas_element.innerText = qtd_minas;
+          if(qtd_minas ==0){
+            verificaFimDeJogo();
+          }
+          break;
+        default:
+          break;
+        }
+      }
+    }
+  });
+
+  function verificaFimDeJogo() {
+    if(document.getElementById("derrotaPartida") == null){
+      // Lógica para verificar se o jogo terminou
+      qtd_minas = document.getElementById("qtd_minas").innerText;
+      if(qtd_minas >=0){
+        //const botoes = document.getElementById("MapaDoCampoMinado").querySelectorAll('button');
+        const botoes = document.getElementById("MapaDoCampoMinado").getElementsByClassName('quadrado')
+        const corProcurada = 'rgb(128, 128, 128)'; // Cor cinza em RGB
+        const botoesCinza = Array.from(botoes).find(btn => {
+          return window.getComputedStyle(btn).backgroundColor === corProcurada;
+        });
+        if (botoesCinza == undefined){
+          globalVarAlerta = true
+          globalMensagemAlerta = 'Jogo terminado!'
+        }
+      }else{
+        globalVarAlerta = true
+        globalMensagemAlerta = 'Verifique a quantidade de Bandeiras!'
+      }
+    }else{
+      derrota();
+    }
+  }
+
+  tabelaMapa.addEventListener("mousedown", (e) => {
+    const elementoClicado = event.target;
+    if(e.buttons == 2){
+      const elemento = document.getElementsByName(elementoClicado.name)[0];
+      if(elemento == undefined || elemento == null){
+        return;
+      }  
+      var partes = elementoClicado.name.split("_");
+      var linha = parseInt(partes.at(-2));
+      var coluna = parseInt(partes.at(-1));
+      
+      var celulaheading = document.getElementsByName("input_quadrado_"+linha+"_"+coluna)[0];
+      if(elemento.name.toString().indexOf("input_") != -1){
+        TamanhoCampoXeY = document.getElementsByName("TamanhoDoMapa")[0].value
+      if(listaDeVisitados == undefined){
+        listaDeVisitados = new Array();
+      }
+      AbrirButtonsaoRedor(celulaheading.name,TamanhoCampoXeY,listaDeVisitados);    
+      }
+    }
+  });
+  function tempo(){
+    var segundos = 0;
+    var minutos = 0;
+    var horas = 0;
+    let intervalID = setInterval(function(){
+      segundos++;
+      if(segundos == 60){
+        segundos = 0;
+        minutos++;
+        if(minutos == 60){
+          minutos = 0;
+          horas++;
+        }
+      }
+      var formatoSegundos = segundos < 10 ? "0" + segundos : segundos;
+      var formatoMinutos = minutos < 10 ? "0" + minutos : minutos;
+      var formatoHoras = horas < 10 ? "0" + horas : horas;
+      document.getElementById("tempo").innerText = formatoHoras + ":" + formatoMinutos + ":" + formatoSegundos;
+    },1000);
+  };
+
+function EmitirAlerta(){
+  alert(globalMensagemAlerta);
+  clearTimeout(intervalID);
+  intervalId = null;
+};
+
+tabelaMapa.addEventListener('mousedown', function(){
+  if(globalVarAlerta == true){
+    EmitirAlerta();
+    globalVarAlerta = false;
+  }
+});
+
+</script>
