@@ -1,0 +1,123 @@
+{% set status_colors = {
+    'draft':       'warning',
+    'active':      'success',
+    'in_progress': 'primary',
+    'completed':   'secondary',
+    'cancelled':   'danger'
+} %}
+{% set status_labels = {
+    'draft':       'Rascunho',
+    'active':      'Ativo',
+    'in_progress': 'Em andamento',
+    'completed':   'Concluído',
+    'cancelled':   'Cancelado'
+} %}
+{% set sv = training.status.value if training.status else '' %}
+
+<div class="training-detail">
+
+    <div class="training-detail-header">
+        <div class="training-detail-title-row">
+            <h5 class="training-detail-title">{{ training.title }}</h5>
+            <span class="badge bg-{{ status_colors.get(sv, 'secondary') }} training-detail-badge">
+                {{ status_labels.get(sv, sv) }}
+            </span>
+        </div>
+
+        <div class="training-detail-meta">
+            <div class="training-detail-meta-item">
+                <i class="fa-regular fa-calendar me-1"></i>
+                <span>
+                    {{ training.starts_on | format_date if training.starts_on else '—' }}
+                    {% if training.ends_on %}
+                        &rarr; {{ training.ends_on | format_date }}
+                    {% endif %}
+                </span>
+            </div>
+            <div class="training-detail-meta-item">
+                <i class="fa-regular fa-clock me-1"></i>
+                <span>{{ training.duration_minutes | format_duration }}</span>
+            </div>
+            {% if training.location %}
+            <div class="training-detail-meta-item">
+                <i class="fa-solid fa-location-dot me-1"></i>
+                <span>{{ training.location }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if training.address or training.online_form_url %}
+    <div class="training-detail-section">
+        <div class="training-detail-grid">
+            {% if training.address %}
+            <div class="training-detail-field">
+                <span class="tdf-label">Endereço</span>
+                <span class="tdf-value">{{ training.address }}</span>
+            </div>
+            {% endif %}
+            {% if training.online_form_url %}
+            <div class="training-detail-field">
+                <span class="tdf-label">Formulário online</span>
+                <span class="tdf-value">
+                    <a href="{{ training.online_form_url }}" target="_blank" rel="noopener noreferrer">
+                        Acessar <i class="fa-solid fa-arrow-up-right-from-square fa-xs ms-1"></i>
+                    </a>
+                </span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if training.class_groups %}
+    <div class="training-detail-section">
+        <div class="tdf-label mb-2">Turmas</div>
+        <div class="d-flex flex-wrap gap-2">
+            {% for g in training.class_groups %}
+            <span class="badge bg-light text-dark border">
+                <i class="fa-solid fa-users fa-xs me-1"></i>
+                {{ g.name }} — {{ g.shift | shift_label }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if training.description %}
+    <div class="training-detail-section">
+        <div class="tdf-label">Conteúdo programático</div>
+        <div class="tdf-text">{{ training.description }}</div>
+    </div>
+    {% endif %}
+
+    {% if training.clinical_skills %}
+    <div class="training-detail-section">
+        <div class="tdf-label">Competências clínicas</div>
+        <div class="tdf-text">{{ training.clinical_skills }}</div>
+    </div>
+    {% endif %}
+
+    {% if training.required_materials or training.prerequisites %}
+    <div class="training-detail-section">
+        <div class="training-detail-grid">
+            {% if training.required_materials %}
+            <div>
+                <div class="tdf-label">Materiais necessários</div>
+                <div class="tdf-text">{{ training.required_materials }}</div>
+            </div>
+            {% endif %}
+            {% if training.prerequisites %}
+            <div>
+                <div class="tdf-label">Pré-requisitos</div>
+                <div class="tdf-text">{{ training.prerequisites }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="training-detail-footer">
+        Cadastrado em {{ training.created_at | format_date }}
+    </div>
+</div>

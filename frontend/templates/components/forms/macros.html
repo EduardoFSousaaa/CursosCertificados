@@ -1,0 +1,63 @@
+{% macro field(f, placeholder="", class="", type="text") %}
+<div class="mb-3">
+    {{ f.label(class="form-label fw-bold") }}
+    {{ f(class="form-control " + class, placeholder=placeholder, type=type) }}
+    {% if f.errors %}
+        <div class="invalid-feedback d-block">{{ f.errors[0] }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro field_inline(f, placeholder="", class="") %}
+<div>
+    {{ f.label(class="form-label fw-bold") }}
+    {{ f(class="form-control " + class, placeholder=placeholder) }}
+    {% if f.errors %}
+        <div class="invalid-feedback d-block">{{ f.errors[0] }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro textarea(f, rows=3, placeholder="", class="") %}
+<div class="mb-3">
+    {{ f.label(class="form-label fw-bold") }}
+    {{ f(class="form-control " + class, rows=rows, placeholder=placeholder) }}
+    {% if f.errors %}
+        <div class="invalid-feedback d-block">{{ f.errors[0] }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro select(f, class="") %}
+<div class="mb-3">
+    {{ f.label(class="form-label fw-bold") }}
+    {{ f(class="form-select " + class) }}
+    {% if f.errors %}
+        <div class="invalid-feedback d-block">{{ f.errors[0] }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro date_field(f, class="") %}
+<div>
+    {{ f.label(class="form-label fw-bold") }}
+    {{ f(class="form-control " + class) }}
+    {% if f.errors %}
+        <div class="invalid-feedback d-block">{{ f.errors[0] }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro errors_summary(form) %}
+{% if form.errors %}
+<div class="alert alert-danger">
+    <ul class="mb-0">
+        {% for field_name, error_list in form.errors.items() %}
+            {% for error in error_list %}
+                <li>{{ getattr(form, field_name).label.text }}: {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endmacro %}

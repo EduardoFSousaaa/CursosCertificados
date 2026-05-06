@@ -1,0 +1,23 @@
+{% macro header(columns, thead_class="table-primary") %}
+<thead class="{{ thead_class }}">
+    <tr>
+        {% for col in columns %}
+        <th {% if col.get('class') %}class="{{ col.class }}"{% endif %}>{{ col.label }}</th>
+        {% endfor %}
+    </tr>
+</thead>
+{% endmacro %}
+
+{% macro empty_state(message="Nenhum registro encontrado.", icon="fa-solid fa-inbox") %}
+<div class="text-center py-5 text-muted">
+    <i class="{{ icon }} fa-3x mb-3"></i>
+    <p class="lead">{{ message }}</p>
+    {{ caller() if caller is defined }}
+</div>
+{% endmacro %}
+
+{% macro badge_status(value, color_map, default="light") %}
+<span class="badge bg-{{ color_map.get(value, default) }}">
+    {{ value.replace('_', ' ').title() }}
+</span>
+{% endmacro %}
