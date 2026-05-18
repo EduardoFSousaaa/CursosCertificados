@@ -48,10 +48,13 @@ class TrainingsController:
 @staticmethod
 def CreateGoogleFormsTraining(id: id):
     from app.controllers.googleController import CredenciaisGoogle
+
+    print("Iniciando processo...")
     forms_service, drive_service = CredenciaisGoogle()
+    print("Autenticação válida detectada com sucesso!")
     training = TrainingService.get_by_id(id)
     if training is None:
-        return self.resposta_erro_customizada(id)
+        return resposta_erro_customizada(id)
     
     # 1. Cria o formulário inicial (Salvo automaticamente no Drive)
     titulo_form = {"info": {"title": training.title,
@@ -79,12 +82,12 @@ def CreateGoogleFormsTraining(id: id):
     
     @staticmethod
     def cabecalho_Formulario(training: Training):
-        Cabecalho= [
-            "updateFormInfo": {
-            "info": infoCurso(training),
-            "updateMask": infoCurso(training).keys()
-            }
-        ]
+        Cabecalho = [{
+                "updateFormInfo": {
+                    "info": infoCurso(training),
+                    "updateMask": infoCurso(training).keys()
+                }
+            }]
         return Cabecalho
 
     @staticmethod
@@ -93,14 +96,13 @@ def CreateGoogleFormsTraining(id: id):
         sessao_1 = [
             {"createItem": {"item": {"title": "Identificação", "pageBreakItem": {}}, "location": {"index": 0}}},
             {"createItem": {"item": {"title": "Qual o seu nome?", "questionItem": {"question": {"required": True, "textQuestion": {}}}}, "location": {"index": 1}}},
-            {"createItem": {"item": {"title": "Qual sua Matrícula?", "questionItem": {"question": {"required": True, "textQuestion": {}}}}, "location": {"index": 2}}}
-               {"createItem": {"item": {"title": "Qual seu Setor ?", "questionItem": {"question": {"required": True, "textQuestion": {}}}}, "location": {"index": 3}}}
-        ]
+            {"createItem": {"item": {"title": "Qual sua Matrícula?", "questionItem": {"question": {"required": True, "textQuestion": {}}}}, "location": {"index": 2}}},
+            {"createItem": {"item": {"title": "Qual seu Setor ?", "questionItem": {"question": {"required": True, "textQuestion": {}}}}, "location": {"index": 3}}}]
 
         # Bloco da Sessão 2
         sessao_2 = [
             {"createItem": {"item": {"title": "Contato", "pageBreakItem": {}}, "location": {"index": 4}}},
-            {"createItem": {"item": {"title": "Qual seu E-mail?", "questionItem": {"question": {"required": True, "textQuestion": {}}}}, "location": {"index": 5}}}
+            {"createItem": {"item": {"title": "Qual seu E-mail?", "questionItem": {"question": {"required": True, "textQuestion": {}}}}, "location": {"index": 5}}},
             {"createItem": {"item": {"title": "Qual seu Telefone?", "questionItem": {"question": {"required": True, "textQuestion": {}}}}, "location": {"index": 6}}}
         ]
 

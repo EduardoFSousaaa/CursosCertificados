@@ -4,6 +4,7 @@ from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 
 class TrainingForm(FlaskForm):
+    idTraining = IntegerField("ID")  # Campo oculto para edição
     title = StringField(
         "Título",
         validators=[DataRequired(message="O título é obrigatório."), Length(max=200)],

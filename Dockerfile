@@ -7,7 +7,9 @@ RUN pip install uv --no-cache-dir
 COPY pyproject.toml .
 RUN uv sync --no-dev --no-cache
 
+COPY credentials.json . 
 COPY . .
+
 
 RUN chmod +x /app/entrypoint.sh
 
