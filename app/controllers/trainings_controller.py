@@ -1,22 +1,47 @@
+import os
+from xxlimited import new
+
 from flask import flash, redirect, render_template, url_for
 from sqlalchemy import true
 
-from app.controllers.googleController import CredenciaisGoogle
+from app.controllers.googleController import TOKEN_PATH, NovaCredenciaisGoogle, obter_credenciais, InicializarServicosGoogle
 from app.exceptions.app_errors import NotFoundError
 from app.forms.training_form import TrainingForm
 from app.services.training_service import TrainingService
 from app.models.training import Training
 
-
 class TrainingsController:
     @staticmethod
     def list_page():
+         # Verifica se o usuário já está autenticado com o Google
+        if not os.path.exists(TOKEN_PATH):
+            # Se não tem token, chama sua função que faz o redirect()
+            return NovaCredenciaisGoogle()
         trainings = TrainingService.list_all()
         return render_template("pages/trainings/list.html", trainings=trainings)
 
     @staticmethod
     def form_page():
-        return render_template("pages/trainings/form.html", form=TrainingForm())
+        dados_teste = {
+            "title": "teste1",
+            "description": "teste2",
+            "duration_minutes": "60",
+            "starts_on": "2026-07-01",
+            "ends_on": "2026-07-01",
+            "location": "Sala 1",
+            "address": "Rua Exemplo, 123",
+            "online_form_url": "",
+            "clinical_skills": "Habilidades Clínicas Exemplo",
+            "required_materials": "Materiais Necessários Exemplo",
+            "prerequisites": "Pré-requisitos Exemplo",
+            "status": "active"
+        }
+        from werkzeug.datastructures import MultiDict
+
+        form = TrainingForm(formdata=MultiDict(dados_teste))
+        
+        #return render_template("pages/trainings/form.html", form=TrainingForm())
+        return render_template("pages/trainings/form.html", form=form)
 
     @staticmethod
     def create():
@@ -47,10 +72,9 @@ class TrainingsController:
         return redirect(url_for("trainings.list"))
 @staticmethod
 def CreateGoogleFormsTraining(id: id):
-    from app.controllers.googleController import CredenciaisGoogle
-
     print("Iniciando processo...")
-    forms_service, drive_service = CredenciaisGoogle()
+    forms_service, drive_service = InicializarServicosGoogle()
+    
     print("Autenticação válida detectada com sucesso!")
     training = TrainingService.get_by_id(id)
     if training is None:
