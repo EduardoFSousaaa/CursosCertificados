@@ -3,11 +3,13 @@ from .certificate import Certificate
 from .class_group import ClassGroup
 from .document import Document
 from .enrollment import Attendance, Enrollment
+from .enrollment_request import EnrollmentRequest
 from .training import Training
 from .user import User
 from app.utils.enums import (
     AssessmentType,
     DocumentType,
+    EnrollmentRequestStatus,
     EnrollmentStatus,
     FinalConcept,
     GradeStatus,
@@ -23,6 +25,7 @@ __all__ = [
     "ClassGroup",
     "Enrollment",
     "Attendance",
+    "EnrollmentRequest",
     "Assessment",
     "Question",
     "QuestionOption",
@@ -35,6 +38,7 @@ __all__ = [
     "TrainingStatus",
     "Shift",
     "EnrollmentStatus",
+    "EnrollmentRequestStatus",
     "FinalConcept",
     "AssessmentType",
     "QuestionType",

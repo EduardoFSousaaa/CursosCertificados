@@ -50,6 +50,7 @@ function loadTrainingForm() {
             modalBody.innerHTML = html;
             activateBootstrapValidation();
             initTrainingStepper();
+            initDatePickers(modalBody);
             showTrainingModal();
         })
         .catch(() => {
@@ -230,6 +231,50 @@ function addClassGroup() {
     container.appendChild(badge);
     inputName.value = '';
     inputName.focus();
+}
+
+// ── Filtro de listagem ─────────────────────────────────────────────────
+(function initFilter() {
+    const searchInput = document.getElementById('filter-search');
+    const statusSelect = document.getElementById('filter-status');
+    const countEl = document.getElementById('filter-count');
+    if (!searchInput && !statusSelect) return;
+
+    function applyFilter() {
+        const text = (searchInput?.value || '').toLowerCase();
+        const status = statusSelect?.value || '';
+        const rows = document.querySelectorAll('#trainings-table tbody .training-row');
+        let visible = 0;
+
+        rows.forEach(row => {
+            const matchText = !text ||
+                (row.dataset.title || '').includes(text) ||
+                (row.dataset.location || '').includes(text);
+            const matchStatus = !status || row.dataset.status === status;
+            const show = matchText && matchStatus;
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+
+        if (countEl) {
+            countEl.textContent = visible < rows.length ? `${visible} de ${rows.length}` : '';
+        }
+    }
+
+    searchInput?.addEventListener('input', applyFilter);
+    statusSelect?.addEventListener('change', applyFilter);
+    applyFilter();
+})();
+
+function clearFilters() {
+    const s = document.getElementById('filter-search');
+    const st = document.getElementById('filter-status');
+    if (s) s.value = '';
+    if (st) st.value = '';
+    document.querySelectorAll('#trainings-table tbody .training-row')
+        .forEach(r => r.style.display = '');
+    const countEl = document.getElementById('filter-count');
+    if (countEl) countEl.textContent = '';
 }
 
 function checkClassGroupEmpty() {

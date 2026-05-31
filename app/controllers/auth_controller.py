@@ -16,6 +16,9 @@ def _is_safe_redirect(target: str) -> bool:
 class AuthController:
     @staticmethod
     def login():
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            return redirect(url_for("trainings.list"))
         form = LoginForm()
         if form.validate_on_submit():
             user = User.query.filter_by(email=form.email.data.lower().strip()).first()

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Inscrições — {{ training.title }}{% endblock %}
+
+{% set status_colors = {'pending': 'warning', 'approved': 'success', 'rejected': 'danger'} %}
+{% set status_labels = {'pending': 'Pendente', 'approved': 'Aprovada', 'rejected': 'Rejeitada'} %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('trainings.list') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i>Voltar
+    </a>
+    <div>
+        <h4 class="mb-0 fw-bold">Inscrições</h4>
+        <span class="text-muted small">{{ training.title }}</span>
+    </div>
+    <div class="ms-auto d-flex gap-2">
+        <span class="text-muted small align-self-center">Link público:</span>
+        <code class="bg-light border rounded px-2 py-1 small">
+            {{ request.host_url }}inscricao/{{ training.enrollment_token }}
+        </code>
+        <button class="btn btn-sm btn-outline-primary"
+                onclick="navigator.clipboard.writeText('{{ request.host_url }}inscricao/{{ training.enrollment_token }}')">
+            <i class="fa-regular fa-copy"></i>
+        </button>
+    </div>
+</div>
+
+{% if not requests %}
+<div class="text-center text-muted py-5">
+    <i class="fa-solid fa-inbox fa-2x mb-3 d-block opacity-25"></i>
+    Nenhuma inscrição recebida ainda.
+</div>
+{% else %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Nome</th>
+                    <th>Matrícula</th>
+                    <th>Setor</th>
+                    <th>E-mail</th>
+                    <th>Turno preferido</th>
+                    <th>Solicitado em</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for req in requests %}
+            {% set sv = req.status.value %}
+            <tr>
+                <td class="fw-semibold">{{ req.name }}</td>
+                <td>{{ req.badge_number }}</td>
+                <td>{{ req.sector }}</td>
+                <td>{{ req.email }}</td>
+                <td>{{ req.preferred_shift.label if req.preferred_shift else '—' }}</td>
+                <td class="text-muted small">{{ req.requested_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>
+                    <span class="badge bg-{{ status_colors.get(sv, 'secondary') }}">
+                        {{ status_labels.get(sv, sv) }}
+                    </span>
+                </td>
+                <td>
+                {% if sv == 'pending' %}
+                    <div class="d-flex gap-1">
+                        {# Botão Aprovar — abre modal #}
+                        <button class="btn btn-sm btn-success"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-approve-{{ req.id }}">
+                            <i class="fa-solid fa-check me-1"></i>Aprovar
+                        </button>
+                        {# Botão Rejeitar — abre modal #}
+                        <button class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-reject-{{ req.id }}">
+                            Rejeitar
+                        </button>
+                    </div>
+                {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{# Modais de aprovação e rejeição #}
+{% for req in requests if req.status.value == 'pending' %}
+
+<div class="modal fade" id="modal-approve-{{ req.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST"
+                  action="{{ url_for('enrollments.approve', training_id=training.id, req_id=req.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h6 class="modal-title fw-bold">Aprovar inscrição</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">
+                        <strong>{{ req.name }}</strong> — matrícula {{ req.badge_number }}
+                    </p>
+                    {% if training.class_groups %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Turma</label>
+                        <select name="class_group_id" class="form-select">
+                            <option value="">Selecione a turma…</option>
+                            {% for g in training.class_groups %}
+                            <option value="{{ g.id }}"
+                                {% if req.preferred_shift and req.preferred_shift == g.shift %}selected{% endif %}>
+                                {{ g.name }} — {{ g.shift.label }}
+                                {% if g.available_spots is not none %}
+                                    ({{ g.available_spots }} vagas)
+                                {% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning small">
+                        Este treinamento ainda não tem turmas cadastradas.
+                        Crie ao menos uma turma antes de aprovar inscrições.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    {% if training.class_groups %}
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fa-solid fa-check me-1"></i>Confirmar aprovação
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-reject-{{ req.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST"
+                  action="{{ url_for('enrollments.reject', training_id=training.id, req_id=req.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h6 class="modal-title fw-bold">Rejeitar inscrição</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Rejeitar inscrição de <strong>{{ req.name }}</strong>?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo (opcional)</label>
+                        <textarea name="notes" class="form-control" rows="2"
+                                  placeholder="Ex: vagas esgotadas, fora do público-alvo…"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Rejeitar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endfor %}
+{% endblock %}

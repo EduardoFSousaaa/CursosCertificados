@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Questões — {{ assessment.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('assessments.list_page', training_id=training.id) }}"
+       class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i>Voltar
+    </a>
+    <div>
+        <h4 class="mb-0 fw-bold">Questões</h4>
+        <span class="text-muted small">{{ assessment.title }}</span>
+    </div>
+</div>
+
+<div class="row g-4">
+    {# Lista de questões existentes #}
+    <div class="col-lg-7">
+        {% if not assessment.questions %}
+        <div class="text-center text-muted py-5 border rounded">
+            <i class="fa-regular fa-file-lines fa-2x mb-3 d-block opacity-25"></i>
+            Nenhuma questão ainda. Adicione a primeira ao lado.
+        </div>
+        {% else %}
+        {% for q in assessment.questions %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex gap-2 align-items-start flex-grow-1">
+                        <span class="badge bg-primary-subtle text-primary fw-bold"
+                              style="min-width:2rem">{{ loop.index }}</span>
+                        <div>
+                            <p class="mb-2 fw-semibold">{{ q.statement }}</p>
+                            {% if q.type == QuestionType.MULTIPLE_CHOICE %}
+                            <ul class="list-unstyled mb-0 ms-1">
+                                {% for opt in q.options %}
+                                <li class="small {% if opt.is_correct %}text-success fw-semibold{% else %}text-muted{% endif %}">
+                                    {% if opt.is_correct %}
+                                        <i class="fa-solid fa-check me-1"></i>
+                                    {% else %}
+                                        <i class="fa-regular fa-circle fa-xs me-1"></i>
+                                    {% endif %}
+                                    {{ opt.text }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary small">Dissertativa</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger ms-2"
+                            onclick="openDeleteQuestionModal(
+                                '{{ url_for('assessments.delete_question', assessment_id=assessment.id, question_id=q.id) }}',
+                                {{ loop.index }}
+                            )">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    {# Formulário de nova questão #}
+    <div class="col-lg-5">
+        <div class="card sticky-top" style="top: 1rem">
+            <div class="card-header fw-bold bg-primary text-white">
+                <i class="fa-solid fa-plus me-2"></i>Nova questão
+            </div>
+            <div class="card-body">
+                <form method="POST"
+                      action="{{ url_for('assessments.add_question', assessment_id=assessment.id) }}"
+                      id="question-form"
+                      novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tipo</label>
+                        <select name="type" class="form-select" id="q-type">
+                            <option value="multiple_choice">Múltipla escolha</option>
+                            <option value="essay">Dissertativa</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Enunciado</label>
+                        <textarea name="statement" class="form-control" rows="3"
+                                  placeholder="Digite a pergunta…" required></textarea>
+                    </div>
+
+                    <div id="options-section">
+                        <label class="form-label fw-bold">Opções</label>
+                        <p class="text-muted small mb-2">
+                            Selecione o botão à esquerda para marcar a resposta correta.
+                        </p>
+                        {% for i in range(1, 6) %}
+                        <div class="input-group mb-2 option-row {% if i > 4 %}d-none{% endif %}"
+                             id="option-row-{{ i }}">
+                            <div class="input-group-text">
+                                <input type="radio" name="correct_option" value="{{ i }}"
+                                       class="form-check-input" {% if i == 1 %}checked{% endif %}>
+                            </div>
+                            <input type="text" name="option_{{ i }}" class="form-control"
+                                   placeholder="Opção {{ i }}…">
+                        </div>
+                        {% endfor %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                id="add-option-btn">
+                            <i class="fa-solid fa-plus me-1"></i>Adicionar opção
+                        </button>
+                    </div>
+
+                    <div class="d-grid mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk me-1"></i>Salvar questão
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const typeSelect = document.getElementById('q-type');
+    const optionsSection = document.getElementById('options-section');
+    let visibleOptions = 4;
+
+    typeSelect.addEventListener('change', () => {
+        optionsSection.style.display = typeSelect.value === 'multiple_choice' ? '' : 'none';
+        document.querySelectorAll('#options-section input[type=text]').forEach(inp => {
+            inp.required = typeSelect.value === 'multiple_choice' && inp.name === 'option_1' || inp.name === 'option_2';
+        });
+    });
+
+    document.getElementById('add-option-btn').addEventListener('click', () => {
+        if (visibleOptions >= 5) return;
+        visibleOptions++;
+        document.getElementById('option-row-' + visibleOptions).classList.remove('d-none');
+        if (visibleOptions >= 5) document.getElementById('add-option-btn').classList.add('d-none');
+    });
+})();
+
+function openDeleteQuestionModal(action, index) {
+    document.getElementById('deleteQuestionIndex').textContent = index;
+    document.getElementById('deleteQuestionForm').action = action;
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDeleteQuestion')).show();
+}
+</script>
+
+{# Modal de confirmação de exclusão de questão #}
+<div class="modal fade" id="modalDeleteQuestion" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center
+                                justify-content-center flex-shrink-0"
+                         style="width:48px;height:48px">
+                        <i class="fa-solid fa-trash text-danger fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0">Remover questão</h6>
+                        <p class="text-muted small mb-0">Esta ação não pode ser desfeita.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="mb-0">Tem certeza que deseja remover a questão
+                    <strong>#<span id="deleteQuestionIndex"></span></strong>?
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteQuestionForm" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fa-solid fa-trash me-1"></i>Sim, remover
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

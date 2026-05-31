@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; color: #333; background: #f5f5f5; padding: 0; margin: 0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5; padding: 32px 0;">
+  <tr>
+    <td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#fff; border-radius:8px; overflow:hidden;
+                    box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background: linear-gradient(135deg,#1a3a6b,#2563a8); padding: 28px 40px;">
+            <p style="margin:0; color:#fff; font-size:20px; font-weight:bold; letter-spacing:.04em;">
+              CursosCertificados
+            </p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding: 36px 40px;">
+            <h2 style="margin:0 0 8px; color:#1a3a6b; font-size:22px;">
+              Parabéns, {{ student.name.split()[0] }}!
+            </h2>
+            <p style="margin:0 0 20px; color:#555; font-size:15px; line-height:1.6;">
+              Você concluiu com sucesso o treinamento
+              <strong style="color:#1a3a6b;">{{ training.title }}</strong>
+              {% if training.duration_minutes %}
+              ({{ training.duration_formatted }})
+              {% endif %}
+              e seu certificado está disponível em anexo.
+            </p>
+
+            <table width="100%" cellpadding="12" cellspacing="0"
+                   style="background:#f0f4ff; border-radius:6px; margin-bottom:24px;">
+              <tr>
+                <td style="font-size:13px; color:#444;">
+                  <strong>Certificado n.º:</strong> {{ cert.number }}<br>
+                  <strong>Emitido em:</strong> {{ cert.issued_on.strftime('%d/%m/%Y') }}<br>
+                  {% if training.location %}
+                  <strong>Local:</strong> {{ training.location }}<br>
+                  {% endif %}
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0; color:#666; font-size:13px; line-height:1.6;">
+              O PDF do certificado está anexado a este e-mail.<br>
+              Guarde-o em local seguro.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f8f8f8; padding: 16px 40px; border-top: 1px solid #eee;">
+            <p style="margin:0; color:#999; font-size:11px; text-align:center;">
+              Este é um e-mail automático. Não responda a esta mensagem.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

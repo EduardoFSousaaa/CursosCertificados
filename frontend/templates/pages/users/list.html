@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% from "components/forms/macros.html" import field, select %}
+
+{% block title %}Usuários{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0 fw-bold"><i class="fa-solid fa-users me-2"></i>Usuários</h4>
+    <button class="btn btn-primary btn-sm"
+            data-bs-toggle="modal" data-bs-target="#modalNewUser">
+        <i class="fa-solid fa-plus me-1"></i>Novo Usuário
+    </button>
+</div>
+
+<div class="mb-3">
+    <input type="text" id="user-search" class="form-control"
+           placeholder="Buscar por nome, matrícula ou setor…">
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="users-table">
+            <thead class="table-light">
+                <tr>
+                    <th>Nome</th>
+                    <th>Matrícula</th>
+                    <th>Setor</th>
+                    <th>E-mail</th>
+                    <th>Papel</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for u in users %}
+            <tr data-search="{{ u.name | lower }} {{ u.badge_number }} {{ (u.location or '') | lower }}">
+                <td class="fw-semibold">{{ u.name }}</td>
+                <td>{{ u.badge_number }}</td>
+                <td>{{ u.location or '—' }}</td>
+                <td class="text-muted small">{{ u.email }}</td>
+                <td>
+                    <span class="badge bg-secondary-subtle text-secondary">
+                        {{ u.role | user_role_label }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge {{ 'bg-success' if u.is_active else 'bg-secondary' }}">
+                        {{ 'Ativo' if u.is_active else 'Inativo' }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('users.profile', user_id=u.id) }}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fa-regular fa-id-card me-1"></i>Perfil
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# Modal — novo usuário #}
+<div class="modal fade" id="modalNewUser" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="POST" action="{{ url_for('users.create_user') }}">
+                {{ form.hidden_tag() }}
+                <div class="modal-header bg-primary text-white">
+                    <h6 class="modal-title fw-bold">
+                        <i class="fa-solid fa-user-plus me-2"></i>Novo Usuário
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12">{{ field(form.name, placeholder="Nome completo") }}</div>
+                        <div class="col-md-6">{{ field(form.email, placeholder="email@hospital.com") }}</div>
+                        <div class="col-md-6">{{ field(form.badge_number, placeholder="Ex: INST001") }}</div>
+                        <div class="col-md-6">{{ select(form.role) }}</div>
+                        <div class="col-md-6">{{ field(form.location, placeholder="Ex: UTI / TI") }}</div>
+                        <div class="col-12">{{ field(form.password, placeholder="Mínimo 6 caracteres", type="password") }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                            data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>Criar usuário
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('user-search').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#users-table tbody tr').forEach(row => {
+        row.style.display = (row.dataset.search || '').includes(q) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

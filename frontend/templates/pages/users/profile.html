@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil — {{ subject.name }}{% endblock %}
+
+{% set concept_colors = {'approved':'success','failed':'danger','pending':'secondary','excused':'warning'} %}
+{% set concept_labels = {'approved':'Aprovado','failed':'Reprovado','pending':'Pendente','excused':'Dispensado'} %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    {% if current_user.is_admin %}
+    <a href="{{ url_for('users.list_users') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i>Funcionários
+    </a>
+    {% endif %}
+    <h4 class="mb-0 fw-bold">Perfil do Funcionário</h4>
+</div>
+
+<div class="row g-4">
+
+    {# Card de informações pessoais #}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center py-4">
+                <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center
+                            justify-content-center mb-3"
+                     style="width:72px;height:72px;font-size:2rem;font-weight:bold;">
+                    {{ subject.name[0].upper() }}
+                </div>
+                <h5 class="fw-bold mb-0">{{ subject.name }}</h5>
+                <p class="text-muted small mb-2">{{ subject.role | user_role_label }}</p>
+                <span class="badge {{ 'bg-success' if subject.is_active else 'bg-secondary' }}">
+                    {{ 'Ativo' if subject.is_active else 'Inativo' }}
+                </span>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted small">Matrícula</span>
+                    <strong class="small">{{ subject.badge_number }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted small">E-mail</span>
+                    <strong class="small">{{ subject.email }}</strong>
+                </li>
+                {% if subject.location %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted small">Setor</span>
+                    <strong class="small">{{ subject.location }}</strong>
+                </li>
+                {% endif %}
+                {% if subject.crm_number %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted small">CRM</span>
+                    <strong class="small">{{ subject.crm_number }}</strong>
+                </li>
+                {% endif %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted small">Cadastro</span>
+                    <strong class="small">{{ subject.created_at | format_date }}</strong>
+                </li>
+            </ul>
+        </div>
+
+        {# Resumo #}
+        <div class="row g-2 mt-1">
+            <div class="col-6">
+                <div class="card text-center py-2">
+                    <div class="fs-4 fw-bold text-primary">{{ enrollments | length }}</div>
+                    <div class="text-muted" style="font-size:.75rem">Matrículas</div>
+                </div>
+            </div>
+            <div class="col-6">
+                {% set certs = enrollments | selectattr('certificate') | list | length %}
+                <div class="card text-center py-2">
+                    <div class="fs-4 fw-bold text-success">{{ certs }}</div>
+                    <div class="text-muted" style="font-size:.75rem">Certificados</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Histórico de matrículas #}
+    <div class="col-md-8">
+        <h6 class="fw-bold mb-3">
+            <i class="fa-solid fa-list-check me-2 text-primary"></i>
+            Histórico de treinamentos ({{ enrollments | length }})
+        </h6>
+
+        {% if not enrollments %}
+        <div class="text-center text-muted py-5 border rounded">
+            <i class="fa-solid fa-graduation-cap fa-2x mb-3 d-block opacity-25"></i>
+            Nenhum treinamento registrado.
+        </div>
+        {% else %}
+        {% for e in enrollments %}
+        {% set training = e.class_group.training %}
+        {% set cv = e.final_concept.value if e.final_concept else 'pending' %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-semibold">{{ training.title }}</div>
+                        <div class="text-muted small">
+                            {{ e.class_group.name }} · {{ e.class_group.shift | shift_label }}
+                            {% if training.starts_on %}
+                            · {{ training.starts_on | format_date }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="badge bg-{{ concept_colors.get(cv, 'secondary') }}">
+                        {{ concept_labels.get(cv, cv) }}
+                    </span>
+                </div>
+
+                <div class="d-flex gap-3 mt-2 flex-wrap">
+                    {# Nota #}
+                    {% set grades = e.assessment_grades %}
+                    {% if grades %}
+                    {% set best = grades | sort(attribute='grade', reverse=true) | first %}
+                    <span class="small text-muted">
+                        <i class="fa-solid fa-star fa-xs me-1"></i>
+                        Nota: <strong>{{ "%.1f"|format(best.grade | float) if best.grade is not none else '—' }}</strong>
+                    </span>
+                    {% endif %}
+
+                    {# Presença #}
+                    {% set total_att = e.attendances | length %}
+                    {% if total_att %}
+                    {% set present = e.attendances | selectattr('is_present') | list | length %}
+                    <span class="small text-muted">
+                        <i class="fa-solid fa-clipboard-check fa-xs me-1"></i>
+                        Presença: <strong>{{ present }}/{{ total_att }}</strong>
+                    </span>
+                    {% endif %}
+
+                    {# Certificado #}
+                    {% if e.certificate %}
+                    <a href="{{ url_for('certificates.download', enrollment_id=e.id) }}"
+                       target="_blank" class="small text-success text-decoration-none">
+                        <i class="fa-solid fa-certificate fa-xs me-1"></i>
+                        Certificado {{ e.certificate.number }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

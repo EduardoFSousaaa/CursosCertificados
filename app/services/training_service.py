@@ -25,6 +25,7 @@ class TrainingService:
             required_materials=form.required_materials.data,
             prerequisites=form.prerequisites.data,
             status=TrainingStatus(form.status.data),
+            instructor_id=form.instructor_id.data or None,
         )
         return TrainingRepository.save(training)
 

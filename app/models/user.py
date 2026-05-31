@@ -58,5 +58,9 @@ class User(UserMixin, db.Model):
     def is_admin(self) -> bool:
         return self.role in (UserRole.ADMIN, UserRole.COORDINATOR)
 
+    @property
+    def is_instructor(self) -> bool:
+        return self.role == UserRole.INSTRUCTOR
+
     def __repr__(self) -> str:
         return f"<User {self.name!r} [{self.badge_number}]>"

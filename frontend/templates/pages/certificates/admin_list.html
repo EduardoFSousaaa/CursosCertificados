@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Certificados — {{ training.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('trainings.list') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i>Voltar
+    </a>
+    <div>
+        <h4 class="mb-0 fw-bold">Certificados</h4>
+        <span class="text-muted small">{{ training.title }}</span>
+    </div>
+</div>
+
+{% if not rows %}
+<div class="text-center text-muted py-5">
+    <i class="fa-solid fa-certificate fa-2x mb-3 d-block opacity-25"></i>
+    Nenhum aluno inscrito neste treinamento.
+</div>
+{% else %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Aluno</th>
+                    <th>Matrícula</th>
+                    <th class="text-center">Melhor nota</th>
+                    <th class="text-center">Resultado</th>
+                    <th class="text-center">Certificado</th>
+                    <th class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+            {% set e = row.enrollment %}
+            {% set grade = row.grade %}
+            {% set cert = row.cert %}
+            {% set approved = grade is not none and grade >= passing_grade %}
+            <tr>
+                <td class="fw-semibold">{{ row.student.name }}</td>
+                <td class="text-muted">{{ row.student.badge_number }}</td>
+                <td class="text-center fw-bold
+                    {% if grade is none %}text-muted
+                    {% elif approved %}text-success
+                    {% else %}text-danger{% endif %}">
+                    {{ "%.1f"|format(grade) if grade is not none else '—' }}
+                </td>
+                <td class="text-center">
+                    {% if grade is none %}
+                    <span class="badge bg-secondary">Sem nota</span>
+                    {% elif approved %}
+                    <span class="badge bg-success">Aprovado</span>
+                    {% else %}
+                    <span class="badge bg-danger">Reprovado</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if cert %}
+                    <span class="badge bg-primary-subtle text-primary border">
+                        <i class="fa-solid fa-certificate me-1"></i>{{ cert.number }}
+                    </span>
+                    {% else %}
+                    <span class="text-muted small">—</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <div class="d-flex gap-1 justify-content-center">
+                        {% if not cert and approved %}
+                        <form method="POST"
+                              action="{{ url_for('certificates.issue', enrollment_id=e.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-success"
+                                    title="Emitir certificado">
+                                <i class="fa-solid fa-file-circle-plus me-1"></i>Emitir
+                            </button>
+                        </form>
+                        {% elif cert %}
+                        <a href="{{ url_for('certificates.download', enrollment_id=e.id) }}"
+                           target="_blank"
+                           class="btn btn-sm btn-outline-primary" title="Visualizar PDF">
+                            <i class="fa-regular fa-file-pdf me-1"></i>PDF
+                        </a>
+                        <form method="POST"
+                              action="{{ url_for('certificates.send_email', enrollment_id=e.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                    title="Enviar por e-mail">
+                                <i class="fa-regular fa-envelope me-1"></i>Enviar
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted small">Reprovado</span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

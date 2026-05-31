@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lista de Presença — {{ training.title }}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; background: #fff; }
+
+        .header { border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
+        .header h1 { font-size: 14pt; font-weight: bold; }
+        .header .meta { font-size: 10pt; color: #444; margin-top: 4px; display: flex; gap: 2rem; flex-wrap: wrap; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th { background: #eee; border: 1px solid #999; padding: 5px 8px; font-size: 10pt; text-align: left; }
+        td { border: 1px solid #ccc; padding: 5px 8px; font-size: 10pt; }
+        tr:nth-child(even) td { background: #fafafa; }
+
+        .signature-col { width: 120px; }
+        .presence-col  { width: 60px; text-align: center; }
+        .number-col    { width: 32px; text-align: center; }
+
+        .footer { margin-top: 32px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .sig-line { border-top: 1px solid #000; width: 220px; text-align: center; padding-top: 4px; font-size: 9pt; }
+
+        .print-btn {
+            position: fixed; bottom: 20px; right: 20px;
+            padding: 8px 16px; background: #0d6efd; color: #fff;
+            border: none; border-radius: 4px; cursor: pointer; font-size: 11pt;
+        }
+
+        @media print {
+            .print-btn { display: none; }
+            body { font-size: 10pt; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Lista de Presença</h1>
+    <div class="meta">
+        <span><strong>Treinamento:</strong> {{ training.title }}</span>
+        <span><strong>Turma:</strong> {{ group.name }} &mdash; {{ group.shift | shift_label }}</span>
+        {% if selected_date %}
+        <span><strong>Data:</strong> {{ selected_date.strftime('%d/%m/%Y') }}</span>
+        {% else %}
+        <span><strong>Data:</strong> _____ / _____ / _________</span>
+        {% endif %}
+        {% if training.location %}
+        <span><strong>Local:</strong> {{ training.location }}</span>
+        {% endif %}
+        {% if training.instructor %}
+        <span><strong>Instrutor(a):</strong> {{ training.instructor.name }}</span>
+        {% endif %}
+    </div>
+</div>
+
+{% if not enrollments %}
+<p style="margin-top:16px; color:#666;">Nenhum aluno inscrito nesta turma.</p>
+{% else %}
+<table>
+    <thead>
+        <tr>
+            <th class="number-col">#</th>
+            <th>Nome</th>
+            <th style="width:90px">Matrícula</th>
+            <th style="width:130px">Setor</th>
+            {% if selected_date %}
+            <th class="presence-col">Presente</th>
+            {% else %}
+            <th class="signature-col">Assinatura</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for enrollment in enrollments %}
+    {% set rec = attendance_map.get(enrollment.id) %}
+    <tr>
+        <td class="number-col">{{ loop.index }}</td>
+        <td>{{ enrollment.student.name }}</td>
+        <td>{{ enrollment.student.badge_number }}</td>
+        <td>{{ enrollment.student.location or '—' }}</td>
+        {% if selected_date %}
+        <td class="presence-col">
+            {% if rec %}
+                {{ '✓' if rec.is_present else '✗' }}
+            {% else %}—{% endif %}
+        </td>
+        {% else %}
+        <td class="signature-col"></td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<p style="margin-top:8px; font-size:9pt; color:#666;">
+    Total: {{ enrollments | length }} aluno{{ 's' if enrollments | length != 1 }}
+    {% if selected_date %}
+    &mdash;
+    {% set n_present = namespace(v=0) %}
+    {% for e in enrollments %}{% if attendance_map.get(e.id) and attendance_map[e.id].is_present %}{% set n_present.v = n_present.v + 1 %}{% endif %}{% endfor %}
+    {{ n_present.v }} presente{{ 's' if n_present.v != 1 }},
+    {{ enrollments | length - n_present.v }} ausente{{ 's' if (enrollments | length - n_present.v) != 1 }}
+    {% endif %}
+</p>
+{% endif %}
+
+<div class="footer">
+    <div class="sig-line">
+        Instrutor(a)
+    </div>
+    <div style="font-size:9pt; color:#888;">
+        Impresso em {{ today.strftime('%d/%m/%Y') }}
+    </div>
+    <div class="sig-line">
+        Coordenador(a)
+    </div>
+</div>
+
+<button class="print-btn" onclick="window.print()">
+    Imprimir
+</button>
+
+</body>
+</html>

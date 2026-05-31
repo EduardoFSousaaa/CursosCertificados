@@ -1,0 +1,61 @@
+{% extends "base_public.html" %}
+{% from "components/forms/macros.html" import field, select %}
+
+{% block title %}Inscrição — {{ training.title }}{% endblock %}
+
+{% block content %}
+<div class="public-card card">
+    <div class="card-body p-4">
+
+        <h5 class="fw-bold mb-1">
+            <i class="fa-solid fa-clipboard-list text-primary me-2"></i>Inscrição no treinamento
+        </h5>
+        <p class="text-muted mb-1">{{ training.title }}</p>
+        {% if training.starts_on %}
+        <p class="text-muted small mb-3">
+            <i class="fa-regular fa-calendar me-1"></i>
+            {{ training.starts_on.strftime('%d/%m/%Y') }}
+            {% if training.ends_on and training.ends_on != training.starts_on %}
+                até {{ training.ends_on.strftime('%d/%m/%Y') }}
+            {% endif %}
+            {% if training.location %}
+                &nbsp;·&nbsp;<i class="fa-solid fa-location-dot me-1"></i>{{ training.location }}
+            {% endif %}
+        </p>
+        {% endif %}
+
+        <hr class="mb-4">
+
+        {% if duplicate %}
+        <div class="alert alert-warning">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            Já existe uma inscrição pendente ou aprovada para esta matrícula neste treinamento.
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('enrollments.submit', token=token) }}" novalidate>
+            {{ form.hidden_tag() }}
+
+            {{ field(form.name, placeholder="Ex: João da Silva") }}
+            {{ field(form.badge_number, placeholder="Ex: 00123") }}
+            {{ field(form.sector, placeholder="Ex: UTI / Enfermagem / TI") }}
+            {{ field(form.email, placeholder="seu@email.com") }}
+            {{ select(form.preferred_shift) }}
+
+            <hr class="my-2">
+            <p class="text-muted small mb-2">
+                <i class="fa-solid fa-lock me-1"></i>
+                Defina uma senha para acessar o sistema após sua inscrição ser aprovada.
+            </p>
+            {{ field(form.password, placeholder="Mínimo 6 caracteres", type="password") }}
+            {{ field(form.confirm_password, placeholder="Repita a senha", type="password") }}
+
+            <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-paper-plane me-2"></i>Enviar inscrição
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

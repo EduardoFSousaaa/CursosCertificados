@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<style>
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 297mm;
+    height: 210mm;
+    font-family: Georgia, "Times New Roman", serif;
+    background: #fff;
+    color: #1a1a2e;
+    display: flex;
+    align-items: stretch;
+  }
+
+  /* Borda lateral esquerda decorativa */
+  .side-bar {
+    width: 18mm;
+    background: linear-gradient(180deg, #1a3a6b 0%, #2563a8 100%);
+    flex-shrink: 0;
+  }
+
+  .content {
+    flex: 1;
+    padding: 16mm 18mm 12mm 16mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #2563a8;
+    padding-bottom: 6mm;
+    margin-bottom: 8mm;
+  }
+  .org-name {
+    font-size: 13pt;
+    font-weight: bold;
+    color: #1a3a6b;
+    letter-spacing: 0.05em;
+  }
+  .cert-number {
+    font-size: 8pt;
+    color: #666;
+    text-align: right;
+  }
+
+  .title {
+    text-align: center;
+    font-size: 26pt;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    color: #1a3a6b;
+    text-transform: uppercase;
+    margin-bottom: 6mm;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 11pt;
+    color: #444;
+    margin-bottom: 8mm;
+  }
+
+  .student-name {
+    text-align: center;
+    font-size: 22pt;
+    font-weight: bold;
+    color: #2563a8;
+    border-bottom: 1.5px solid #2563a8;
+    display: inline-block;
+    padding: 0 12mm 2mm;
+    margin: 0 auto 5mm;
+  }
+  .name-wrapper {
+    text-align: center;
+    margin-bottom: 5mm;
+  }
+
+  .body-text {
+    text-align: center;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 6mm;
+  }
+  .training-title {
+    font-style: italic;
+    font-weight: bold;
+    color: #1a3a6b;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: auto;
+    padding-top: 8mm;
+    border-top: 1px solid #ccc;
+  }
+  .sig-block {
+    text-align: center;
+    min-width: 55mm;
+  }
+  .sig-line {
+    border-top: 1px solid #333;
+    padding-top: 2mm;
+    font-size: 9pt;
+    color: #555;
+  }
+  .issued-info {
+    text-align: center;
+    font-size: 9pt;
+    color: #777;
+  }
+</style>
+</head>
+<body>
+<div class="side-bar"></div>
+<div class="content">
+
+  <div class="header">
+    <div class="org-name">CursosCertificados</div>
+    <div class="cert-number">
+      N.º {{ cert.number }}<br>
+      Emitido em {{ cert.issued_on.strftime('%d/%m/%Y') }}
+    </div>
+  </div>
+
+  <div>
+    <div class="title">Certificado</div>
+    <div class="subtitle">Certificamos que</div>
+
+    <div class="name-wrapper">
+      <span class="student-name">{{ student.name }}</span>
+    </div>
+
+    <div class="body-text">
+      concluiu com aproveitamento o treinamento<br>
+      <span class="training-title">{{ training.title }}</span>
+      {% if training.duration_minutes %}
+      <br>com carga horária de <strong>{{ training.duration_formatted }}</strong>
+      {% endif %}
+      {% if training.ends_on %}
+      , realizado em {{ training.ends_on.strftime('%d/%m/%Y') }}
+      {% endif %}
+      {% if training.location %}
+      , em {{ training.location }}
+      {% endif %}.
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="sig-block">
+      <div class="sig-line">
+        {{ training.instructor.name if training.instructor else '______________________________' }}<br>
+        Instrutor(a)
+      </div>
+    </div>
+    <div class="issued-info">
+      {% if training.ends_on %}
+      {{ training.ends_on.strftime('%d de %B de %Y') }}
+      {% else %}
+      {{ cert.issued_on.strftime('%d de %B de %Y') }}
+      {% endif %}
+    </div>
+    <div class="sig-block">
+      <div class="sig-line">
+        ______________________________<br>
+        Coordenador(a)
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

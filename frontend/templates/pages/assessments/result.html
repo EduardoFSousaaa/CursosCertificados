@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Resultado — {{ assessment.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        {# Banner de resultado #}
+        {% if grade and grade.grade is not none %}
+        <div class="card mb-4 border-{{ 'success' if passed else 'danger' }}">
+            <div class="card-body text-center py-4">
+                <i class="fa-solid fa-{{ 'circle-check text-success' if passed else 'circle-xmark text-danger' }} mb-2"
+                   style="font-size: 2.5rem;"></i>
+                <h4 class="fw-bold mb-1">{{ 'Aprovado!' if passed else 'Reprovado' }}</h4>
+                <p class="mb-0">
+                    Sua nota: <strong class="fs-4">{{ "%.1f" | format(grade.grade | float) }}</strong>
+                    &nbsp;/&nbsp; mínimo: {{ passing_grade }}
+                </p>
+            </div>
+        </div>
+        {% elif grade %}
+        <div class="alert alert-info">
+            <i class="fa-solid fa-hourglass-half me-2"></i>
+            Sua prova foi recebida e está aguardando correção manual.
+        </div>
+        {% endif %}
+
+        <h5 class="fw-bold mb-3">{{ assessment.title }}</h5>
+
+        {# Gabarito #}
+        {% for q in assessment.questions %}
+        {% set answer = answers.get(q.id) %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="fw-semibold mb-3">
+                    <span class="badge bg-secondary me-2">{{ loop.index }}</span>
+                    {{ q.statement }}
+                </p>
+
+                {% if q.type == QuestionType.MULTIPLE_CHOICE %}
+                {% for opt in q.options %}
+                {% set selected = answer and answer.option_id == opt.id %}
+                <div class="d-flex align-items-center gap-2 mb-1 rounded px-2 py-1
+                    {% if opt.is_correct %}bg-success bg-opacity-10 border border-success
+                    {% elif selected and not opt.is_correct %}bg-danger bg-opacity-10 border border-danger
+                    {% endif %}">
+                    <i class="fa-solid
+                        {% if opt.is_correct %}fa-check text-success
+                        {% elif selected %}fa-xmark text-danger
+                        {% else %}fa-circle fa-xs text-muted{% endif %}
+                        fa-fw"></i>
+                    <span class="small {{ 'fw-semibold' if opt.is_correct or selected }}">
+                        {{ opt.text }}
+                        {% if selected and not opt.is_correct %}
+                        <span class="text-danger small"> ← sua resposta</span>
+                        {% elif selected and opt.is_correct %}
+                        <span class="text-success small"> ← correto</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="bg-light rounded p-2 small">
+                    {{ answer.text_answer if answer and answer.text_answer else '(sem resposta)' }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}

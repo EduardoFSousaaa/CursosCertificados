@@ -60,7 +60,7 @@
             <div class="training-detail-field">
                 <span class="tdf-label">Formulário online</span>
                 <span class="tdf-value">
-                    <a href="{{ training.online_form_url }}" target="_blank" rel="noopener noreferrer">
+                    <a href="{{ training.online_form_url }}"  rel="noopener noreferrer">
                         Acessar <i class="fa-solid fa-arrow-up-right-from-square fa-xs ms-1"></i>
                     </a>
                 </span>
@@ -113,6 +113,105 @@
                 <div class="tdf-text">{{ training.prerequisites }}</div>
             </div>
             {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Avaliações disponíveis — visível apenas para alunos inscritos #}
+    {% if assessment_status %}
+    <div class="training-detail-section">
+        <div class="tdf-label mb-2">Avaliações</div>
+        <div class="d-flex flex-column gap-2">
+            {% for item in assessment_status %}
+            {% set a = item.assessment %}
+            {% set g = item.grade %}
+            <div class="d-flex align-items-center justify-content-between
+                        border rounded px-3 py-2">
+                <div>
+                    <span class="fw-semibold small">{{ a.title }}</span>
+                    {% if g and g.grade is not none %}
+                    <span class="badge bg-{{ 'success' if g.grade|float >= 7 else 'danger' }} ms-2">
+                        {{ "%.1f"|format(g.grade|float) }}
+                    </span>
+                    {% elif g %}
+                    <span class="badge bg-secondary ms-2">Aguardando correção</span>
+                    {% endif %}
+                </div>
+                {% if g and g.grade is not none %}
+                <a href="{{ url_for('assessments.result', assessment_id=a.id) }}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="fa-solid fa-chart-bar me-1"></i>Ver resultado
+                </a>
+                {% elif g %}
+                <span class="text-muted small">Enviada</span>
+                {% else %}
+                <a href="{{ url_for('assessments.take', assessment_id=a.id) }}"
+                   class="btn btn-sm btn-primary">
+                    <i class="fa-solid fa-pen me-1"></i>Responder
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Ações rápidas — visíveis apenas para admin/coordenador #}
+    {% if current_user.is_authenticated and current_user.is_admin %}
+    <div class="training-detail-section">
+        <div class="tdf-label mb-2">Ações</div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('class_groups.manage', training_id=training.id) }}"
+               class="btn btn-sm btn-outline-success" >
+                <i class="fa-solid fa-users me-1"></i>Turmas
+            </a>
+            <a href="{{ url_for('enrollments.admin_list', training_id=training.id) }}"
+               class="btn btn-sm btn-outline-primary" >
+                <i class="fa-solid fa-clipboard-list me-1"></i>Inscrições
+            </a>
+            <a href="{{ url_for('assessments.list_page', training_id=training.id) }}"
+               class="btn btn-sm btn-outline-primary" >
+                <i class="fa-solid fa-file-circle-question me-1"></i>Avaliações
+            </a>
+            <a href="{{ url_for('certificates.admin_list', training_id=training.id) }}"
+               class="btn btn-sm btn-outline-warning" >
+                <i class="fa-solid fa-certificate me-1"></i>Certificados
+            </a>
+            <button class="btn btn-sm btn-outline-secondary"
+                    onclick="navigator.clipboard.writeText(window.location.origin + '/inscricao/{{ training.enrollment_token }}'); this.innerHTML='<i class=\'fa-solid fa-check me-1\'></i>Copiado!'">
+                <i class="fa-regular fa-copy me-1"></i>Copiar link de inscrição
+            </button>
+            {% for g in training.class_groups %}
+            <a href="{{ url_for('attendance.mark', group_id=g.id) }}"
+               class="btn btn-sm btn-outline-success" >
+                <i class="fa-solid fa-clipboard-check me-1"></i>Presença — {{ g.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Ações rápidas — visíveis apenas para instrutor do treinamento #}
+    {% if current_user.is_authenticated and current_user.is_instructor and training.instructor_id == current_user.id %}
+    <div class="training-detail-section">
+        <div class="tdf-label mb-2">Ações</div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('enrollments.admin_list', training_id=training.id) }}"
+               class="btn btn-sm btn-outline-primary">
+                <i class="fa-solid fa-clipboard-list me-1"></i>Inscritos
+            </a>
+            {% for a in training.assessments %}
+            <a href="{{ url_for('assessments.results', assessment_id=a.id) }}"
+               class="btn btn-sm btn-outline-primary">
+                <i class="fa-solid fa-chart-bar me-1"></i>Resultados — {{ a.title }}
+            </a>
+            {% endfor %}
+            {% for g in training.class_groups %}
+            <a href="{{ url_for('attendance.mark', group_id=g.id) }}"
+               class="btn btn-sm btn-outline-success">
+                <i class="fa-solid fa-clipboard-check me-1"></i>Presença — {{ g.name }}
+            </a>
+            {% endfor %}
         </div>
     </div>
     {% endif %}

@@ -1,0 +1,18 @@
+{% extends "base_public.html" %}
+
+{% block title %}Inscrição enviada — {{ training.title }}{% endblock %}
+
+{% block content %}
+<div class="public-card card text-center">
+    <div class="card-body p-5">
+        <i class="fa-solid fa-circle-check text-success mb-3" style="font-size: 3.5rem;"></i>
+        <h5 class="fw-bold mb-2">Inscrição enviada!</h5>
+        <p class="text-muted mb-1">Sua inscrição no treinamento</p>
+        <p class="fw-semibold mb-3">{{ training.title }}</p>
+        <p class="text-muted small">
+            foi recebida e está aguardando análise.<br>
+            Você será informado sobre a confirmação.
+        </p>
+    </div>
+</div>
+{% endblock %}

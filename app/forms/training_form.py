@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import DateField, IntegerField, SelectField, StringField, TextAreaField
-from wtforms.validators import DataRequired, Length, NumberRange, Optional
+from wtforms.validators import DataRequired, Length, NumberRange, Optional, ValidationError
 
 
 class TrainingForm(FlaskForm):
@@ -30,6 +30,11 @@ class TrainingForm(FlaskForm):
     clinical_skills = TextAreaField("Competências Clínicas", validators=[Optional()])
     required_materials = TextAreaField("Materiais Necessários", validators=[Optional()])
     prerequisites = TextAreaField("Pré-requisitos", validators=[Optional()])
+    instructor_id = SelectField(
+        "Instrutor",
+        coerce=lambda x: int(x) if x else None,
+        validators=[Optional()],
+    )
     status = SelectField(
         "Situação",
         choices=[

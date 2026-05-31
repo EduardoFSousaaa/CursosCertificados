@@ -3,7 +3,7 @@ import os
 from flask import Flask
 
 from .config import config
-from .extensions import cors, csrf, db, login_manager, migrate
+from .extensions import cors, csrf, db, login_manager, mail, migrate
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -22,6 +22,7 @@ def create_app(env: str | None = None) -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
+    mail.init_app(app)
     cors.init_app(app, resources={})  # CORS disabled globally; configure per-route as needed
 
     from .security.session import init_login
@@ -39,17 +40,31 @@ def create_app(env: str | None = None) -> Flask:
     # Import models so Alembic can detect them during migrations
     from .models import (  # noqa: F401
         Assessment, AssessmentGrade, Certificate, ClassGroup, Document,
-        Attendance, Enrollment, Question, QuestionOption, StudentAnswer,
-        Training, User,
+        Attendance, Enrollment, EnrollmentRequest, Question, QuestionOption,
+        StudentAnswer, Training, User,
     )
 
     from .routes.home import home_bp
     from .routes.trainings import trainings_bp
     from .routes.auth import auth_bp
+    from .routes.enrollments import enrollments_bp
+    from .routes.attendance import attendance_bp
+    from .routes.assessments import assessments_bp
+    from .routes.certificates import certificates_bp
+    from .routes.class_groups import class_groups_bp
+    from .routes.users import users_bp
+    from .routes.reports import reports_bp
 
     app.register_blueprint(home_bp, url_prefix="/home")
     app.register_blueprint(trainings_bp, url_prefix="/trainings")
     app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(enrollments_bp, url_prefix="/inscricao")
+    app.register_blueprint(attendance_bp, url_prefix="/presenca")
+    app.register_blueprint(assessments_bp, url_prefix="/provas")
+    app.register_blueprint(certificates_bp, url_prefix="/certificados")
+    app.register_blueprint(class_groups_bp, url_prefix="/turmas")
+    app.register_blueprint(users_bp, url_prefix="/usuarios")
+    app.register_blueprint(reports_bp, url_prefix="/relatorios")
 
     @app.route("/")
     def index():

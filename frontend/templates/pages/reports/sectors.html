@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório por Setor{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <h4 class="mb-0 fw-bold">
+        <i class="fa-solid fa-chart-bar me-2"></i>Participação por Setor
+    </h4>
+    <span class="text-muted small ms-auto">
+        Total: {{ total_enrollments }} matrícula{{ 's' if total_enrollments != 1 }}
+    </span>
+</div>
+
+{% if not data %}
+<div class="text-center text-muted py-5">
+    <i class="fa-solid fa-chart-bar fa-2x mb-3 d-block opacity-25"></i>
+    Nenhuma inscrição registrada ainda.
+</div>
+{% else %}
+
+{# Cards de destaque #}
+{% if data %}
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-primary">{{ data | length }}</div>
+                <div class="text-muted small">Setores ativos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card text-center border-success">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-success">
+                    {{ data | sum(attribute='approved') }}
+                </div>
+                <div class="text-muted small">Total aprovados</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card text-center border-warning">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-warning">
+                    {{ data | sum(attribute='certificates') }}
+                </div>
+                <div class="text-muted small">Certificados emitidos</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Setor</th>
+                    <th class="text-center">Matrículas</th>
+                    <th class="text-center">Aprovados</th>
+                    <th class="text-center">Certificados</th>
+                    <th style="width:30%">Participação</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in data %}
+            <tr>
+                <td class="fw-semibold">{{ row.sector }}</td>
+                <td class="text-center">{{ row.total }}</td>
+                <td class="text-center text-success fw-semibold">{{ row.approved }}</td>
+                <td class="text-center text-warning fw-semibold">{{ row.certificates }}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="progress flex-grow-1" style="height:8px">
+                            <div class="progress-bar bg-primary" style="width:{{ row.pct }}%"></div>
+                        </div>
+                        <span class="small text-muted" style="min-width:2.5rem">{{ row.pct }}%</span>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

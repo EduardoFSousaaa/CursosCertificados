@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Presença — {{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('trainings.list') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i>Voltar
+    </a>
+    <div>
+        <h4 class="mb-0 fw-bold">Lista de Presença</h4>
+        <span class="text-muted small">
+            {{ training.title }} &mdash; {{ group.name }} ({{ group.shift | shift_label }})
+        </span>
+    </div>
+    {% if selected_date %}
+    <a href="{{ url_for('attendance.print_sheet', group_id=group.id, data=selected_date.isoformat()) }}"
+       target="_blank"
+       class="btn btn-sm btn-outline-secondary ms-auto">
+        <i class="fa-solid fa-print me-1"></i>Imprimir
+    </a>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    {# Seletor de data #}
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="fa-regular fa-calendar me-2 text-primary"></i>Data da aula
+                </h6>
+                <form method="GET" action="{{ url_for('attendance.mark', group_id=group.id) }}">
+                    <input type="date"
+                           name="data"
+                           class="form-control mb-2"
+                           value="{{ selected_date.isoformat() if selected_date else '' }}">
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-sm">Carregar</button>
+                    </div>
+                </form>
+
+                {% if past_dates %}
+                <hr>
+                <p class="text-muted small mb-2">Datas anteriores</p>
+                <ul class="list-unstyled mb-0">
+                    {% for d in past_dates %}
+                    <li>
+                        <a href="{{ url_for('attendance.mark', group_id=group.id, data=d.isoformat()) }}"
+                           class="small text-decoration-none {% if selected_date and d == selected_date %}fw-bold text-primary{% else %}text-muted{% endif %}">
+                            <i class="fa-regular fa-circle-dot fa-xs me-1"></i>
+                            {{ d.strftime('%d/%m/%Y') }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Tabela de alunos #}
+    <div class="col-md-9">
+        {% if not selected_date %}
+        <div class="card">
+            <div class="card-body text-center text-muted py-5">
+                <i class="fa-regular fa-calendar-days fa-2x mb-3 d-block opacity-25"></i>
+                Selecione uma data para lançar a presença.
+            </div>
+        </div>
+        {% elif not enrollments %}
+        <div class="card">
+            <div class="card-body text-center text-muted py-5">
+                <i class="fa-solid fa-users fa-2x mb-3 d-block opacity-25"></i>
+                Nenhum aluno inscrito nesta turma.
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span class="fw-semibold">
+                    {{ selected_date.strftime('%d/%m/%Y') }} &mdash;
+                    {{ enrollments | length }} aluno{{ 's' if enrollments | length != 1 }}
+                </span>
+                <span class="text-muted small" id="present-count">
+                    {% set n_present = namespace(v=0) %}
+                    {% for e in enrollments %}
+                        {% if attendance_map.get(e.id) and attendance_map[e.id].is_present %}
+                            {% set n_present.v = n_present.v + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ n_present.v }} presentes
+                </span>
+            </div>
+            <form method="POST"
+                  action="{{ url_for('attendance.save', group_id=group.id) }}"
+                  id="attendance-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="class_date" value="{{ selected_date.isoformat() }}">
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:3rem" class="text-center">
+                                    <input type="checkbox" class="form-check-input" id="check-all"
+                                           title="Marcar todos">
+                                </th>
+                                <th>Nome</th>
+                                <th>Matrícula</th>
+                                <th>Setor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for enrollment in enrollments %}
+                        {% set rec = attendance_map.get(enrollment.id) %}
+                        {% set is_present = rec and rec.is_present %}
+                        <tr class="{% if is_present %}table-success{% endif %}" id="row-{{ enrollment.id }}">
+                            <td class="text-center">
+                                <input type="checkbox"
+                                       class="form-check-input presence-check"
+                                       name="present"
+                                       value="{{ enrollment.id }}"
+                                       {% if is_present %}checked{% endif %}>
+                            </td>
+                            <td class="fw-semibold">{{ enrollment.student.name }}</td>
+                            <td>{{ enrollment.student.badge_number }}</td>
+                            <td class="text-muted small">{{ enrollment.student.location or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>Salvar presença
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Upload de lista assinada #}
+<div class="card mt-4">
+    <div class="card-header fw-semibold">
+        <i class="fa-solid fa-paperclip me-2 text-secondary"></i>Listas assinadas anexadas
+    </div>
+    <div class="card-body">
+        <form method="POST"
+              action="{{ url_for('attendance.upload_sheet', group_id=group.id) }}"
+              enctype="multipart/form-data"
+              class="d-flex gap-2 align-items-end flex-wrap mb-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+                <label class="form-label small fw-bold mb-1">Data da lista</label>
+                <input type="text" name="label" class="form-control form-control-sm"
+                       placeholder="Ex: 2026-06-10"
+                       value="{{ selected_date.isoformat() if selected_date else '' }}">
+            </div>
+            <div>
+                <label class="form-label small fw-bold mb-1">Arquivo (PDF / imagem)</label>
+                <input type="file" name="file" class="form-control form-control-sm"
+                       accept=".pdf,.png,.jpg,.jpeg,.webp" required>
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-primary">
+                <i class="fa-solid fa-upload me-1"></i>Anexar
+            </button>
+        </form>
+
+        {% if uploaded_docs %}
+        <ul class="list-group list-group-flush">
+            {% for doc in uploaded_docs %}
+            <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                <span class="small">
+                    <i class="fa-regular fa-file me-2 text-muted"></i>{{ doc.url }}
+                </span>
+                <a href="{{ url_for('attendance.serve_doc', doc_id=doc.id) }}"
+                   target="_blank" class="btn btn-sm btn-outline-secondary">
+                    <i class="fa-solid fa-eye"></i>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted small mb-0">Nenhum arquivo anexado.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const checkAll = document.getElementById('check-all');
+    const checks = document.querySelectorAll('.presence-check');
+    const countEl = document.getElementById('present-count');
+
+    function updateRow(cb) {
+        const row = document.getElementById('row-' + cb.value);
+        if (row) row.className = cb.checked ? 'table-success' : '';
+    }
+
+    function updateCount() {
+        if (!countEl) return;
+        const n = document.querySelectorAll('.presence-check:checked').length;
+        countEl.textContent = n + ' presente' + (n !== 1 ? 's' : '');
+    }
+
+    checks.forEach(cb => {
+        cb.addEventListener('change', () => { updateRow(cb); updateCount(); });
+    });
+
+    if (checkAll) {
+        checkAll.addEventListener('change', () => {
+            checks.forEach(cb => { cb.checked = checkAll.checked; updateRow(cb); });
+            updateCount();
+        });
+    }
+})();
+</script>
+{% endblock %}

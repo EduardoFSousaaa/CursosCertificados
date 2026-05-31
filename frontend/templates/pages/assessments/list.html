@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% from "components/forms/macros.html" import field, select, textarea, date_field %}
+
+{% block title %}Avaliações — {{ training.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('trainings.list') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i>Voltar
+    </a>
+    <div>
+        <h4 class="mb-0 fw-bold">Avaliações</h4>
+        <span class="text-muted small">{{ training.title }}</span>
+    </div>
+    <button class="btn btn-primary btn-sm ms-auto"
+            data-bs-toggle="modal" data-bs-target="#modalNewAssessment">
+        <i class="fa-solid fa-plus me-1"></i>Nova avaliação
+    </button>
+</div>
+
+{% set type_labels = {
+    'technical_test': 'Prova técnica',
+    'questionnaire':  'Questionário',
+    'practical':      'Avaliação prática'
+} %}
+
+{% if not assessments %}
+<div class="text-center text-muted py-5">
+    <i class="fa-solid fa-file-circle-question fa-2x mb-3 d-block opacity-25"></i>
+    Nenhuma avaliação cadastrada para este treinamento.
+</div>
+{% else %}
+<div class="row g-3">
+    {% for a in assessments %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="badge bg-secondary-subtle text-secondary">
+                        {{ type_labels.get(a.type.value, a.type.value) }}
+                    </span>
+                    {% if a.applied_on %}
+                    <span class="text-muted small">{{ a.applied_on | format_date }}</span>
+                    {% endif %}
+                </div>
+                <h6 class="fw-bold mt-2 mb-1">{{ a.title }}</h6>
+                {% if a.description %}
+                <p class="text-muted small mb-2">{{ a.description | truncate(80) }}</p>
+                {% endif %}
+                <p class="text-muted small mb-0">
+                    <i class="fa-regular fa-circle-question me-1"></i>
+                    {{ a.questions | length }} {% if a.questions | length == 1 %}questão{% else %}questões{% endif %}
+                    &nbsp;&middot;&nbsp;
+                    <i class="fa-solid fa-users me-1"></i>
+                    {{ a.grades | length }} resposta{% if a.grades | length != 1 %}s{% endif %}
+                </p>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <a href="{{ url_for('assessments.questions', assessment_id=a.id) }}"
+                   class="btn btn-sm btn-outline-primary">
+                    <i class="fa-solid fa-list-ol me-1"></i>Questões
+                </a>
+                <a href="{{ url_for('assessments.results', assessment_id=a.id) }}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="fa-solid fa-chart-bar me-1"></i>Resultados
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{# Modal — nova avaliação #}
+<div class="modal fade" id="modalNewAssessment" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('assessments.create', training_id=training.id) }}">
+                {{ form.hidden_tag() }}
+                <div class="modal-header bg-primary text-white">
+                    <h6 class="modal-title fw-bold">Nova avaliação</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {{ field(form.title, placeholder="Ex: Prova técnica — Módulo 1") }}
+                    {{ textarea(form.description, rows=2, placeholder="Instruções gerais…") }}
+                    <div class="row g-2">
+                        <div class="col-7">{{ select(form.type) }}</div>
+                        <div class="col-5">{{ date_field(form.applied_on) }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                            data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-arrow-right me-1"></i>Criar e adicionar questões
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

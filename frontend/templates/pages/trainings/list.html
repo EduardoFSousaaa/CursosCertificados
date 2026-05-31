@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "components/buttons/macros.html" import primary, danger_outline %}
 {% from "components/modals/macros.html" import base as modal %}
-{% from "components/tables/macros.html" import empty_state, badge_status %}
+{% from "components/tables/macros.html" import empty_state %}
 
 {% block title %}Treinamentos — CursosCertificados{% endblock %}
 
@@ -10,62 +10,141 @@
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0"><i class="fa-solid fa-book me-2"></i>Treinamentos</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">
+        <i class="fa-solid fa-book me-2"></i>
+        {% if current_user.is_admin %}Treinamentos
+        {% elif current_user.is_instructor %}Meus Treinamentos (Instrutor)
+        {% else %}Meus Treinamentos{% endif %}
+    </h2>
+    {% if current_user.is_authenticated and current_user.is_admin %}
     <button class="btn btn-primary"
             data-bs-toggle="modal"
             data-bs-target="#modalNewTraining"
             onclick="loadTrainingForm()">
         <i class="fa-solid fa-plus me-1"></i>Novo Treinamento
     </button>
+    {% endif %}
 </div>
 
-{% set status_colors = {
-    'draft': 'warning',
-    'active': 'success',
-    'in_progress': 'primary',
-    'completed': 'secondary',
-    'cancelled': 'danger'
-} %}
+{# Filtros #}
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                    </span>
+                    <input type="text" id="filter-search" class="form-control border-start-0"
+                           placeholder="Buscar por título ou local…">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="filter-status" class="form-select form-select-sm">
+                    <option value="">Todos os status</option>
+                    <option value="draft">Rascunho</option>
+                    <option value="active">Ativo</option>
+                    <option value="in_progress">Em andamento</option>
+                    <option value="completed">Concluído</option>
+                    <option value="cancelled">Cancelado</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fa-solid fa-xmark me-1"></i>Limpar
+                </button>
+            </div>
+            <div class="col-md-2 text-end">
+                <span id="filter-count" class="text-muted small"></span>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% if trainings %}
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
+<div class="card">
+    <table class="table table-hover align-middle mb-0" id="trainings-table">
         <thead class="table-primary">
             <tr>
-                <th>#</th>
+                <th class="ps-3">#</th>
                 <th>Título</th>
-                <th>Data</th>
+                <th>Início</th>
+                <th>Término</th>
                 <th>Local</th>
                 <th>Situação</th>
-                <th class="text-center">Ações</th>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <th class="text-center pe-3">Ações</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
             {% for training in trainings %}
+            {% set sv = training.status.value if training.status else '' %}
             <tr class="training-row" style="cursor:pointer"
+                data-title="{{ training.title | lower }}"
+                data-location="{{ (training.location or '') | lower }}"
+                data-status="{{ sv }}"
                 onclick="loadTrainingDetail({{ training.id }})">
-                <td class="text-muted small">{{ training.id }}</td>
+                <td class="ps-3 text-muted small">{{ training.id }}</td>
                 <td class="fw-semibold">{{ training.title }}</td>
                 <td>{{ training.starts_on | format_date if training.starts_on else '—' }}</td>
+                <td>{{ training.ends_on | format_date if training.ends_on else '—' }}</td>
                 <td>{{ training.location or '—' }}</td>
                 <td>
-                    {% set sv = training.status.value if training.status else '' %}
-                    {{ badge_status(sv, status_colors) }}
+                    <span class="badge bg-{{ training.status | training_status_color }}">
+                        {{ training.status | training_status_label }}
+                    </span>
                 </td>
-                <td class="text-center" onclick="event.stopPropagation()">
-                    <form action="{{ url_for('trainings.delete', id=training.id) }}" method="POST"
-                          onsubmit="return confirm('Remover o treinamento \'{{ training.title }}\'?')">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        {{ danger_outline("", icon="fa-solid fa-trash", title="Remover") }}
-                    </form>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <td class="text-center pe-3" onclick="event.stopPropagation()">
+                    <div class="d-flex gap-1 justify-content-center">
+                        {# Dropdown de status — usa popper fixed para não ficar preso no overflow #}
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="dropdown"
+                                    data-bs-auto-close="true"
+                                    title="Alterar situação">
+                                <i class="fa-solid fa-tag"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                {% for s_val, s_label in [
+                                    ('active',      'Ativar'),
+                                    ('in_progress', 'Em andamento'),
+                                    ('completed',   'Concluído / Arquivar'),
+                                    ('cancelled',   'Cancelar'),
+                                    ('draft',       'Voltar para rascunho')
+                                ] %}
+                                {% if sv != s_val %}
+                                <li>
+                                    <form method="POST"
+                                          action="{{ url_for('trainings.set_status', id=training.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="status" value="{{ s_val }}">
+                                        <button type="submit" class="dropdown-item small">{{ s_label }}</button>
+                                    </form>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {# Excluir — dispara modal de confirmação #}
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger"
+                                title="Remover"
+                                onclick="openDeleteModal({{ training.id }}, '{{ training.title | replace("'", "\\'") }}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
                 </td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 {% else %}
+{% if current_user.is_admin %}
 {% call empty_state("Nenhum treinamento cadastrado.") %}
     <button class="btn btn-primary mt-2"
             data-bs-toggle="modal"
@@ -74,27 +153,70 @@
         Cadastrar o primeiro
     </button>
 {% endcall %}
+{% else %}
+{% call empty_state("Você ainda não está inscrito em nenhum treinamento.") %}{% endcall %}
+{% endif %}
 {% endif %}
 
 {# Modal — detalhe do treinamento #}
 {% call modal("modalTrainingDetail", "Treinamento", size="lg", body_id="modalBodyTrainingDetail") %}
     <div class="text-center py-4">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
-        </div>
+        <div class="spinner-border text-primary" role="status"></div>
     </div>
 {% endcall %}
 
 {# Modal — novo treinamento #}
 {% call modal("modalNewTraining", "Novo Treinamento", size="lg", body_id="modalBodyNewTraining") %}
     <div class="text-center py-4">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
-        </div>
+        <div class="spinner-border text-primary" role="status"></div>
     </div>
 {% endcall %}
+
+{# Modal — confirmação de exclusão #}
+<div class="modal fade" id="modalDeleteTraining" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center
+                                justify-content-center flex-shrink-0"
+                         style="width:48px;height:48px">
+                        <i class="fa-solid fa-trash text-danger fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0">Remover treinamento</h6>
+                        <p class="text-muted small mb-0">Esta ação não pode ser desfeita.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="mb-0">Tem certeza que deseja remover o treinamento
+                    <strong id="deleteTrainingName"></strong>?
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteTrainingForm" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fa-solid fa-trash me-1"></i>Sim, remover
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/pages/trainings.js') }}"></script>
+<script>
+function openDeleteModal(id, name) {
+    document.getElementById('deleteTrainingName').textContent = name;
+    document.getElementById('deleteTrainingForm').action = '/trainings/delete/' + id;
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDeleteTraining')).show();
+}
+</script>
 {% endblock %}

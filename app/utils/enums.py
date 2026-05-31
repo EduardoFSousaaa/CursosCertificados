@@ -68,6 +68,14 @@ class GradeStatus(enum.Enum):
     SUBMITTED = "submitted"
     GRADED = "graded"
 
+    @property
+    def label(self) -> str:
+        return {
+            GradeStatus.PENDING: "Pendente",
+            GradeStatus.SUBMITTED: "Enviado",
+            GradeStatus.GRADED: "Corrigido",
+        }[self]
+
 
 class DocumentType(enum.Enum):
     FORM = "form"
@@ -75,3 +83,9 @@ class DocumentType(enum.Enum):
     IMAGE = "image"
     PDF = "pdf"
     LINK = "link"
+
+
+class EnrollmentRequestStatus(enum.Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"

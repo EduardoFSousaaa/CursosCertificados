@@ -2,6 +2,11 @@
     background-color: rgba(0, 0, 0, 0.5);
 }
 
+/* Evita que o dropdown da tabela fique preso no overflow do card */
+#trainings-table .dropdown-menu {
+    position: fixed !important;
+}
+
 #modalNewTraining .modal-body {
     max-height: 70vh;
     overflow-y: auto;

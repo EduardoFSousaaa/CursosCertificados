@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ assessment.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="mb-4">
+            <h4 class="fw-bold mb-1">{{ assessment.title }}</h4>
+            <p class="text-muted small">
+                {{ training.title }}
+                {% if assessment.applied_on %}
+                &nbsp;&middot;&nbsp;{{ assessment.applied_on | format_date }}
+                {% endif %}
+            </p>
+            {% if assessment.description %}
+            <div class="alert alert-info small">
+                <i class="fa-solid fa-circle-info me-2"></i>{{ assessment.description }}
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="POST" action="{{ url_for('assessments.submit', assessment_id=assessment.id) }}"
+              id="assessment-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            {% for q in assessment.questions %}
+            <div class="card mb-4" id="q-{{ q.id }}">
+                <div class="card-body">
+                    <p class="fw-semibold mb-3">
+                        <span class="badge bg-primary me-2">{{ loop.index }}</span>
+                        {{ q.statement }}
+                    </p>
+
+                    {% if q.type == QuestionType.MULTIPLE_CHOICE %}
+                    <div class="ps-1">
+                        {% for opt in q.options %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio"
+                                   name="{{ q.id }}" value="{{ opt.id }}"
+                                   id="opt-{{ opt.id }}" required>
+                            <label class="form-check-label" for="opt-{{ opt.id }}">
+                                {{ opt.text }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <textarea name="{{ q.id }}" class="form-control" rows="4"
+                              placeholder="Sua resposta…"></textarea>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="d-flex justify-content-end gap-2 mt-2 mb-5">
+                <button type="button" class="btn btn-primary px-4"
+                        data-bs-toggle="modal" data-bs-target="#modalConfirmSubmit">
+                    <i class="fa-solid fa-paper-plane me-2"></i>Enviar prova
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<div class="modal fade" id="modalConfirmSubmit" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center
+                                justify-content-center flex-shrink-0"
+                         style="width:48px;height:48px">
+                        <i class="fa-solid fa-paper-plane text-primary fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0">Enviar prova</h6>
+                        <p class="text-muted small mb-0">Esta ação não pode ser desfeita.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="mb-0">Tem certeza que deseja enviar suas respostas?
+                    Após o envio <strong>não será possível alterar</strong>.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-bs-dismiss="modal">Voltar e revisar</button>
+                <button type="button" class="btn btn-primary btn-sm"
+                        onclick="document.getElementById('assessment-form').submit()">
+                    <i class="fa-solid fa-paper-plane me-1"></i>Confirmar envio
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -13,6 +13,7 @@
             integrity="sha384-PPIZEGYM1v8zp5Py7UjFb79S58UeqCL9pYVnVPURKEqvioPROaVAJKKLzvH2rDnI"
             crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -32,6 +33,56 @@
     <script src="{{ url_for('static', filename='js/utils/escape.js') }}"></script>
     <script src="{{ url_for('static', filename='js/utils/http.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/toast.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    <script>
+    function initDatePickers(root) {
+        var container = root || document;
+
+        // 1. Inicializa todos os inputs de data
+        container.querySelectorAll("input[type='date']").forEach(function (el) {
+            if (!el._flatpickr) {
+                flatpickr(el, {
+                    dateFormat: "Y-m-d",
+                    altInput: true,
+                    altFormat: "d/m/Y",
+                    locale: "pt",
+                    allowInput: true,
+                });
+            }
+        });
+
+        // 2. Conecta pares starts_on → ends_on dentro de cada formulário
+        container.querySelectorAll("form").forEach(function (form) {
+            var startEl = form.querySelector("[name='starts_on']");
+            var endEl   = form.querySelector("[name='ends_on']");
+            if (!startEl || !endEl) return;
+
+            var startFp = startEl._flatpickr;
+            var endFp   = endEl._flatpickr;
+            if (!startFp || !endFp) return;
+
+            // Evita registrar o handler duas vezes
+            if (startEl._dateRangeWired) return;
+            startEl._dateRangeWired = true;
+
+            startFp.config.onChange.push(function (dates, dateStr) {
+                endFp.set("minDate", dateStr || null);
+                // Se a data final já escolhida ficou antes da inicial, limpa
+                if (endFp.selectedDates[0] && dates[0] && endFp.selectedDates[0] < dates[0]) {
+                    endFp.clear();
+                }
+            });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initDatePickers();
+        document.addEventListener("shown.bs.modal", function (e) {
+            initDatePickers(e.target);
+        });
+    });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

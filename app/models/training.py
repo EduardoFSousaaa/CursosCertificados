@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from app.extensions import db
@@ -8,6 +9,10 @@ class Training(db.Model):
     __tablename__ = "trainings"
 
     id = db.Column(db.Integer, primary_key=True)
+    enrollment_token = db.Column(
+        db.String(36), unique=True, nullable=True,
+        default=lambda: str(uuid.uuid4()),
+    )
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     clinical_skills = db.Column(db.Text, nullable=True)

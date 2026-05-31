@@ -7,35 +7,40 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
+            {% set _ep = request.endpoint or '' %}
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index') }}">
-                        <i class="fa-solid fa-house me-1"></i>Início
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('trainings.list') }}">
+                    <a class="nav-link {% if _ep.startswith('trainings.') or _ep.startswith('class_groups.') or _ep.startswith('enrollments.') or _ep.startswith('assessments.') or _ep.startswith('certificates.') or _ep.startswith('attendance.') %}active{% endif %}"
+                       href="{{ url_for('trainings.list') }}">
                         <i class="fa-solid fa-book me-1"></i>Treinamentos
                     </a>
                 </li>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <li class="nav-item">
+                    <a class="nav-link {% if _ep.startswith('users.') %}active{% endif %}"
+                       href="{{ url_for('users.list_users') }}">
+                        <i class="fa-solid fa-users me-1"></i>Usuários
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if _ep.startswith('reports.') %}active{% endif %}"
+                       href="{{ url_for('reports.sectors') }}">
+                        <i class="fa-solid fa-chart-bar me-1"></i>Relatórios
+                    </a>
+                </li>
+                {% endif %}
             </ul>
             <div class="navbar-right ms-auto">
                 {% if current_user.is_authenticated %}
                 <div class="navbar-admin">
                     <div class="navbar-admin-text">
-                        <div class="navbar-admin-title">Portal Administrativo</div>
-                        <div class="navbar-admin-sub">Coordenação Médica</div>
+                        <div class="navbar-admin-title">{{ current_user.name }}</div>
+                        <div class="navbar-admin-sub">{{ current_user.role.value | title }}</div>
                     </div>
                     <div class="navbar-admin-actions">
-                        <button class="navbar-icon-btn" type="button" title="Alertas">
-                            <i class="fa-regular fa-bell"></i>
-                        </button>
-                        <button class="navbar-icon-btn" type="button" title="Ajuda">
-                            <i class="fa-regular fa-circle-question"></i>
-                        </button>
-                        <button class="navbar-icon-btn" type="button" title="Configurações">
-                            <i class="fa-solid fa-gear"></i>
-                        </button>
+                        <a class="navbar-icon-btn" href="{{ url_for('users.own_profile') }}" title="Meu perfil">
+                            <i class="fa-regular fa-id-card"></i>
+                        </a>
                     </div>
                     <div class="navbar-avatar" title="{{ current_user.name }}">
                         {{ current_user.name[0].upper() if current_user.name else 'U' }}
