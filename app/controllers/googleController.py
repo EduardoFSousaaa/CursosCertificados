@@ -46,7 +46,7 @@ def oauth2callback():
 
     try:
         flow = criar_fluxo()
-        flow.fetch_token(authorization_response=request.url)
+        flow.fetch_token(authorization_response=current_url)
     
         creds = flow.credentials
         

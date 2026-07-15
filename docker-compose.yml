@@ -27,6 +27,7 @@ services:
     volumes:
       - .:/app
       - /app/.venv
+      - ./data:/app/data
     depends_on:
       db:
         condition: service_healthy
