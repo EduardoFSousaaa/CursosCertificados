@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "components/buttons/macros.html" import link %}
+
+{% block title %}Erro interno — CursosCertificados{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-1 fw-bold text-danger">500</h1>
+    <h2 class="mb-3">Erro interno do servidor</h2>
+    <p class="text-muted mb-4">Algo deu errado. Tente novamente em alguns instantes.</p>
+    {{ link("Voltar ao início", url_for('index'), icon="fa-solid fa-house") }}
+</div>
+{% endblock %}

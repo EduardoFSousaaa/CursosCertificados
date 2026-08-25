@@ -1,0 +1,35 @@
+{% macro primary(text, icon=None, type="button", class="") %}
+<button type="{{ type }}" class="btn btn-primary {{ class }}">
+    {% if icon %}<i class="{{ icon }} me-1"></i>{% endif %}{{ text }}
+</button>
+{% endmacro %}
+
+{% macro secondary(text, icon=None, type="button", class="") %}
+<button type="{{ type }}" class="btn btn-secondary {{ class }}">
+    {% if icon %}<i class="{{ icon }} me-1"></i>{% endif %}{{ text }}
+</button>
+{% endmacro %}
+
+{% macro danger(text, icon=None, type="submit", class="") %}
+<button type="{{ type }}" class="btn btn-danger {{ class }}">
+    {% if icon %}<i class="{{ icon }} me-1"></i>{% endif %}{{ text }}
+</button>
+{% endmacro %}
+
+{% macro danger_outline(text, icon=None, type="submit", class="", title="") %}
+<button type="{{ type }}" class="btn btn-outline-danger {{ class }}" {% if title %}title="{{ title }}"{% endif %}>
+    {% if icon %}<i class="{{ icon }}"></i>{% endif %}{% if text %} {{ text }}{% endif %}
+</button>
+{% endmacro %}
+
+{% macro success(text, icon=None, type="submit", class="") %}
+<button type="{{ type }}" class="btn btn-success {{ class }}">
+    {% if icon %}<i class="{{ icon }} me-1"></i>{% endif %}{{ text }}
+</button>
+{% endmacro %}
+
+{% macro link(text, href, icon=None, class="btn btn-primary") %}
+<a href="{{ href }}" class="{{ class }}">
+    {% if icon %}<i class="{{ icon }} me-1"></i>{% endif %}{{ text }}
+</a>
+{% endmacro %}

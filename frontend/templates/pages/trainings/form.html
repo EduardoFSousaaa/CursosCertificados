@@ -1,0 +1,134 @@
+{% from "components/forms/macros.html" import field_inline, textarea, select, date_field %}
+{% from "components/buttons/macros.html" import success, secondary %}
+
+<div class="container-fluid p-3 training-form">
+    <form action="{{ url_for('trainings.add') }}" method="POST" id="formNewTraining"
+          class="needs-validation" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="training-steps" data-stepper>
+            <button type="button" class="step active" data-step="1">1. Basico</button>
+            <button type="button" class="step" data-step="2">2. Local e Turmas</button>
+            <button type="button" class="step" data-step="3">3. Detalhes</button>
+            <button type="button" class="step" data-step="4">4. Revisao</button>
+        </div>
+
+        <div class="training-step" data-step="1">
+            <div class="row g-3">
+                <div class="col-12">
+                    {{ form.title.label(class="form-label fw-bold") }}
+                    {{ form.title(class="form-control", placeholder="Ex: Excel Avançado") }}
+                    {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">{{ form.title.errors[0] }}</div>
+                    {% else %}
+                        <div class="invalid-feedback">O título é obrigatório.</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    {{ date_field(form.starts_on) }}
+                </div>
+                <div class="col-md-6">
+                    {{ date_field(form.ends_on) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ field_inline(form.duration_minutes, placeholder="Ex: 480 (= 8h)") }}
+                </div>
+                <div class="col-md-6">
+                    {{ select(form.status) }}
+                </div>
+            </div>
+
+            <div class="training-step-actions">
+                <span></span>
+                <button type="button" class="btn btn-primary" data-stepper-next>
+                    Proximo <i class="fa-solid fa-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="training-step" data-step="2">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ field_inline(form.location, placeholder="Ex: Sala 01 ou Remoto") }}
+                </div>
+                <div class="col-md-6">
+                    {{ field_inline(form.address, placeholder="Endereço completo") }}
+                </div>
+
+                <div class="col-12">
+                    {{ field_inline(form.online_form_url, placeholder="https://...") }}
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label fw-bold">Turmas e Turnos</label>
+                    <div class="input-group mb-2">
+                        <input type="text" id="inputGroupName" class="form-control" placeholder="Nome (ex: T1)">
+                        <select id="selectGroupShift" class="form-select" style="max-width: 140px;">
+                            <option value="morning">Manhã</option>
+                            <option value="afternoon">Tarde</option>
+                            <option value="evening">Noite</option>
+                        </select>
+                        <button class="btn btn-outline-primary" type="button" onclick="addClassGroup()">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="classGroupList" class="p-2 border rounded bg-light d-flex flex-wrap" style="min-height: 48px; gap: 8px;">
+                        <span class="text-muted small align-self-center" id="classGroupEmptyMsg">Nenhuma turma definida.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="training-step-actions">
+                <button type="button" class="btn btn-outline-secondary" data-stepper-prev>
+                    <i class="fa-solid fa-arrow-left me-1"></i>Voltar
+                </button>
+                <button type="button" class="btn btn-primary" data-stepper-next>
+                    Proximo <i class="fa-solid fa-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="training-step" data-step="3">
+            <div class="row g-3">
+                <div class="col-12">
+                    {{ textarea(form.description, rows=3, placeholder="Conteúdo programático...") }}
+                </div>
+                <div class="col-12">
+                    {{ textarea(form.clinical_skills, rows=3) }}
+                </div>
+                <div class="col-md-6">
+                    {{ textarea(form.required_materials, rows=3) }}
+                </div>
+                <div class="col-md-6">
+                    {{ textarea(form.prerequisites, rows=3) }}
+                </div>
+            </div>
+
+            <div class="training-step-actions">
+                <button type="button" class="btn btn-outline-secondary" data-stepper-prev>
+                    <i class="fa-solid fa-arrow-left me-1"></i>Voltar
+                </button>
+                <button type="button" class="btn btn-primary" data-stepper-next>
+                    Proximo <i class="fa-solid fa-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="training-step" data-step="4">
+            <div class="training-review">
+                <h6 class="mb-2">Revisao do Treinamento</h6>
+                <div id="trainingReviewList" class="training-review-list"></div>
+            </div>
+
+            <div class="training-step-actions">
+                <button type="button" class="btn btn-outline-secondary" data-stepper-prev>
+                    <i class="fa-solid fa-arrow-left me-1"></i>Voltar
+                </button>
+                {{ success("Salvar", icon="fa-solid fa-floppy-disk", type="submit", class="px-4") }}
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </form>
+</div>

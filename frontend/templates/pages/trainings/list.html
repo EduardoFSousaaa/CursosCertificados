@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "components/buttons/macros.html" import primary, danger_outline %}
+{% from "components/modals/macros.html" import base as modal %}
+{% from "components/tables/macros.html" import empty_state, badge_status %}
+
+{% block title %}Treinamentos — CursosCertificados{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/trainings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fa-solid fa-book me-2"></i>Treinamentos</h2>
+    <button class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#modalNewTraining"
+            onclick="loadTrainingForm()">
+        <i class="fa-solid fa-plus me-1"></i>Novo Treinamento
+    </button>
+</div>
+
+{% set status_colors = {
+    'draft': 'warning',
+    'active': 'success',
+    'in_progress': 'primary',
+    'completed': 'secondary',
+    'cancelled': 'danger'
+} %}
+
+{% if trainings %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-primary">
+            <tr>
+                <th>#</th>
+                <th>Título</th>
+                <th>Data</th>
+                <th>Local</th>
+                <th>Situação</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for training in trainings %}
+            <tr class="training-row" style="cursor:pointer"
+                onclick="loadTrainingDetail({{ training.id }})">
+                <td class="text-muted small">{{ training.id }}</td>
+                <td class="fw-semibold">{{ training.title }}</td>
+                <td>{{ training.starts_on | format_date if training.starts_on else '—' }}</td>
+                <td>{{ training.location or '—' }}</td>
+                <td>
+                    {% set sv = training.status.value if training.status else '' %}
+                    {{ badge_status(sv, status_colors) }}
+                </td>
+                <td class="text-center" onclick="event.stopPropagation()">
+                    <form action="{{ url_for('trainings.delete', id=training.id) }}" method="POST"
+                          onsubmit="return confirm('Remover o treinamento \'{{ training.title }}\'?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {{ danger_outline("", icon="fa-solid fa-trash", title="Remover") }}
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+{% call empty_state("Nenhum treinamento cadastrado.") %}
+    <button class="btn btn-primary mt-2"
+            data-bs-toggle="modal"
+            data-bs-target="#modalNewTraining"
+            onclick="loadTrainingForm()">
+        Cadastrar o primeiro
+    </button>
+{% endcall %}
+{% endif %}
+
+{# Modal — detalhe do treinamento #}
+{% call modal("modalTrainingDetail", "Treinamento", size="lg", body_id="modalBodyTrainingDetail") %}
+    <div class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </div>
+{% endcall %}
+
+{# Modal — novo treinamento #}
+{% call modal("modalNewTraining", "Novo Treinamento", size="lg", body_id="modalBodyNewTraining") %}
+    <div class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </div>
+{% endcall %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/pages/trainings.js') }}"></script>
+{% endblock %}

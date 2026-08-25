@@ -1,0 +1,186 @@
+.dark {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+#modalNewTraining .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.training-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.training-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.training-steps .step {
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+    color: #64748b;
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.training-steps .step.active {
+    background: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+    font-weight: 600;
+}
+
+.training-step {
+    display: none;
+}
+
+.training-step.is-active {
+    display: block;
+}
+
+.training-step-actions {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.training-review {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.training-review-list {
+    display: grid;
+    gap: 8px;
+}
+
+.review-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+}
+
+.review-item span {
+    color: #64748b;
+}
+
+.review-item strong {
+    color: #0f172a;
+    font-weight: 600;
+    text-align: right;
+}
+
+/* ── Training detail modal ── */
+.training-row:hover td {
+    background-color: #f0f4ff;
+}
+
+#modalBodyTrainingDetail {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.training-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.training-detail-header {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.training-detail-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.training-detail-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.training-detail-badge {
+    white-space: nowrap;
+    font-size: 0.75rem;
+}
+
+.training-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.training-detail-meta-item {
+    display: flex;
+    align-items: center;
+}
+
+.training-detail-section {
+    padding: 12px 0;
+    border-top: 1px solid #f1f5f9;
+}
+
+.training-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.training-detail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tdf-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+}
+
+.tdf-value {
+    font-size: 0.9rem;
+    color: #0f172a;
+}
+
+.tdf-text {
+    font-size: 0.875rem;
+    color: #334155;
+    white-space: pre-wrap;
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+.training-detail-footer {
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: right;
+}

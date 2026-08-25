@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Acesso Seguro — CursosCertificados{% endblock %}
+{% block body_class %}auth-body{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+    <div class="auth-brand">
+        <div class="auth-logo"><i class="fa-solid fa-graduation-cap"></i></div>
+        <div class="auth-brand-title">EduAdmin Atelier</div>
+        <div class="auth-brand-sub">Portal Administrativo</div>
+    </div>
+
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <h2>Acesso Seguro</h2>
+            <p>Insira suas credenciais institucionais para acessar o Atelier.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="auth-field">
+                {{ form.email.label(class="auth-label") }}
+                <div class="auth-input">
+                    <i class="fa-regular fa-envelope"></i>
+                    {{ form.email(class="form-control", placeholder="administrador@instituicao.edu.br") }}
+                </div>
+                {% if form.email.errors %}
+                    <div class="text-danger small mt-1">{{ form.email.errors[0] }}</div>
+                {% endif %}
+            </div>
+
+            <div class="auth-field">
+                <div class="auth-input">
+                    <i class="fa-solid fa-lock"></i>
+                    {{ form.password(class="form-control", placeholder="••••••••") }}
+                </div>
+                {% if form.password.errors %}
+                    <div class="text-danger small mt-1">{{ form.password.errors[0] }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                Entrar <i class="fa-solid fa-arrow-right ms-2"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Protegido por criptografia de nivel institucional.
+        </div>
+    </div>
+</div>
+{% endblock %}
